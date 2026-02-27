@@ -31,10 +31,16 @@ class ScraperService
         $startTime = hrtime(true);
 
         try {
-            $html = Browsershot::url(self::URL)
+            $browsershot = Browsershot::url(self::URL)
                 ->setNodeModulePath(base_path('node_modules/'))
-                ->waitUntilNetworkIdle()
-                ->bodyHtml();
+                ->waitUntilNetworkIdle();
+
+            // Use system Chromium if configured (needed for ARM servers)
+            if ($chromePath = config('services.browsershot.chrome_path')) {
+                $browsershot->setChromePath($chromePath);
+            }
+
+            $html = $browsershot->bodyHtml();
 
             $records = $this->parse($html);
             $new = $this->upsert($records);

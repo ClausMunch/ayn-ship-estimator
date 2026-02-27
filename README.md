@@ -14,7 +14,7 @@ A single-purpose shipping estimate tool for AYN Thor handhelds. Pick your model 
 
 | Layer | Technology |
 |-------|-----------|
-| Backend | Laravel 12, PHP 8.3+ |
+| Backend | Laravel 12, PHP 8.4+ |
 | Database | SQLite |
 | Frontend | Inertia.js + React |
 | Styling | Tailwind CSS v4 |
@@ -26,7 +26,7 @@ A single-purpose shipping estimate tool for AYN Thor handhelds. Pick your model 
 
 ### Requirements
 
-- PHP 8.3+
+- PHP 8.4+ (required by Laravel 12)
 - Composer
 - Node.js 20+ (or Bun)
 - Puppeteer system dependencies (for scraping)
@@ -89,11 +89,13 @@ Enable with a cron entry:
 
 ### Server requirements
 
-- PHP 8.3+
+- PHP 8.4+ (required by Laravel 12)
 - Node.js 20+
 - Supervisor (for queue worker)
 
 ### System dependencies for Puppeteer
+
+**For x86-64 servers:**
 
 ```bash
 npx puppeteer install
@@ -103,18 +105,75 @@ sudo apt-get install -y \
   libasound2t64
 ```
 
-> **Note:** On Ubuntu 24.04+, use `libasound2t64` instead of `libasound2`.
+**For ARM servers (e.g., AWS Graviton):**
+
+```bash
+# Install Chromium for ARM instead of Puppeteer's bundled Chrome
+sudo apt-get install -y chromium-browser chromium-codecs-ffmpeg-extra
+
+# Skip Puppeteer's binary download
+PUPPETEER_SKIP_DOWNLOAD=true npm install
+```
+
+Then add to your `.env` (ensure it's on its own line):
+```env
+PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+```
+
+Or via command line:
+```bash
+echo "" >> .env  # Ensure file ends with newline
+echo "PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser" >> .env
+```
+
+> **Note:** On Ubuntu 24.04+, use `libasound2t64` instead of `libasound2` for x86-64 servers.
 
 ### Deploy script
 
-Append to Ploi defaults:
+**For ARM servers (recommended - tested on Ploi.io):**
+
+```bash
+# Install system Chromium for ARM compatibility
+sudo apt-get update
+sudo apt-get install -y chromium-browser chromium-codecs-ffmpeg-extra
+
+npm install
+npm run build
+
+# Configure Puppeteer to use system Chromium
+if ! grep -q "PUPPETEER_EXECUTABLE_PATH" .env; then
+    echo "" >> .env
+    echo "PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser" >> .env
+fi
+
+touch database/database.sqlite
+php artisan migrate --force
+
+# Fix storage permissions (critical for logs and cache)
+# Remove existing log file and recreate with proper ownership
+rm -f storage/logs/laravel.log
+chmod -R 775 storage bootstrap/cache
+chgrp -R www-data storage bootstrap/cache
+
+php artisan config:clear
+php artisan queue:restart
+```
+
+**For x86-64 servers:**
 
 ```bash
 npm install
 npm run build
 npx puppeteer install
+
 touch database/database.sqlite
 php artisan migrate --force
+
+# Fix storage permissions
+rm -f storage/logs/laravel.log
+chmod -R 775 storage bootstrap/cache
+chgrp -R www-data storage bootstrap/cache
+
 php artisan queue:restart
 ```
 

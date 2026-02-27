@@ -6,7 +6,10 @@ export function buildTimeline(batches) {
     const map = new Map();
     for (const b of batches) {
         const date = b.ship_date;
-        const end = b.order_range_end;
+        const end = Number(b.order_range_end);
+        if (!date || Number.isNaN(end)) {
+            continue;
+        }
         if (!map.has(date) || end > map.get(date)) {
             map.set(date, end);
         }
@@ -27,11 +30,20 @@ export function buildTimeline(batches) {
 }
 
 function toTimestamp(dateStr) {
+    if (!dateStr) return NaN;
     return new Date(dateStr + 'T00:00:00Z').getTime();
 }
 
 function formatDate(ts) {
+    if (!Number.isFinite(ts)) {
+        return null;
+    }
+
     const d = new Date(ts);
+    if (Number.isNaN(d.getTime())) {
+        return null;
+    }
+
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
     return `${days[d.getUTCDay()]}, ${months[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
@@ -48,10 +60,14 @@ export function estimateShipDate(timeline, orderPrefix) {
 
     // Already shipped
     if (orderPrefix <= timeline[0].end) {
+        const ts = toTimestamp(timeline[0].date);
+        const formatted = formatDate(ts);
+        if (!formatted) return null;
+
         return {
             type: 'shipped',
             date: timeline[0].date,
-            formatted: formatDate(toTimestamp(timeline[0].date)),
+            formatted,
         };
     }
 
@@ -64,16 +80,21 @@ export function estimateShipDate(timeline, orderPrefix) {
             const currTs = toTimestamp(timeline[i].date);
 
             if (currEnd === prevEnd) {
+                const formatted = formatDate(currTs);
+                if (!formatted) return null;
+
                 return {
                     type: 'shipped',
                     date: timeline[i].date,
-                    formatted: formatDate(currTs),
+                    formatted,
                 };
             }
 
             const ratio = (orderPrefix - prevEnd) / (currEnd - prevEnd);
             const estimatedTs = prevTs + ratio * (currTs - prevTs);
-            return { type: 'estimated', formatted: formatDate(estimatedTs) };
+            const formatted = formatDate(estimatedTs);
+            if (!formatted) return null;
+            return { type: 'estimated', formatted };
         }
     }
 
@@ -93,7 +114,9 @@ export function estimateShipDate(timeline, orderPrefix) {
                     const t = toTimestamp(timeline[i].date) - toTimestamp(timeline[i - 1].date);
                     const rate = t / r;
                     const extra = (orderPrefix - last.end) * rate;
-                    return { type: 'extrapolated', formatted: formatDate(lastTs + extra) };
+                    const formatted = formatDate(lastTs + extra);
+                    if (!formatted) return null;
+                    return { type: 'extrapolated', formatted };
                 }
             }
             return null;
@@ -101,7 +124,9 @@ export function estimateShipDate(timeline, orderPrefix) {
 
         const rate = (lastTs - prevTs) / orderRange;
         const extra = (orderPrefix - last.end) * rate;
-        return { type: 'extrapolated', formatted: formatDate(lastTs + extra) };
+        const formatted = formatDate(lastTs + extra);
+        if (!formatted) return null;
+        return { type: 'extrapolated', formatted };
     }
 
     return null;
