@@ -32,6 +32,7 @@ class ScraperService
 
         try {
             $html = Browsershot::url(self::URL)
+                ->setNodeModulePath(base_path('node_modules/'))
                 ->waitUntilNetworkIdle()
                 ->bodyHtml();
 

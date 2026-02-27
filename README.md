@@ -1,59 +1,189 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# AYN Thor Ship Date Estimator
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A single-purpose shipping estimate tool for AYN Thor handhelds. Pick your model variant, enter the first 4 digits of your order number, and get an interpolated or extrapolated ship date based on real shipping data.
 
-## About Laravel
+## Features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **Instant estimates** — client-side interpolation/extrapolation, no API calls needed
+- **10 model variants** — Rainbow Max/Pro, Black Max/Pro/Base/Lite, White Max/Pro, Clear Purple Max/Pro
+- **Email notifications** — subscribe to get notified when your estimated ship date changes
+- **Automated scraping** — twice-daily scrape of the AYN shipping dashboard with admin alerts on failure
+- **Bot protection** — honeypot field, signed timestamp, and rate limiting (no third-party CAPTCHA)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Tech Stack
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+| Layer | Technology |
+|-------|-----------|
+| Backend | Laravel 12, PHP 8.3+ |
+| Database | SQLite |
+| Frontend | Inertia.js + React |
+| Styling | Tailwind CSS v4 |
+| Scraping | spatie/browsershot (Puppeteer) |
+| Queue | SQLite-backed (`database` driver) |
+| Mail | Laravel Mail via SMTP |
 
-## Learning Laravel
+## Local Development
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+### Requirements
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- PHP 8.3+
+- Composer
+- Node.js 20+ (or Bun)
+- Puppeteer system dependencies (for scraping)
 
-## Laravel Sponsors
+### Setup
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+```bash
+# Install dependencies
+composer install
+npm install      # or: bun install
 
-### Premium Partners
+# Environment
+cp .env.example .env
+php artisan key:generate
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+# Database
+touch database/database.sqlite
+php artisan migrate
+php artisan seed:data
 
-## Contributing
+# Build frontend
+npm run build    # or: bun run build
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+# Serve
+php artisan serve
+```
 
-## Code of Conduct
+The app will be available at `http://localhost:8000`.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Development server with hot reload
 
-## Security Vulnerabilities
+```bash
+npm run dev      # or: bun run dev
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Artisan Commands
 
-## License
+| Command | Description |
+|---------|-------------|
+| `php artisan seed:data` | Seed model variants and historical shipping batches (idempotent) |
+| `php artisan scrape` | Scrape the AYN shipping dashboard and update batch data |
+| `php artisan notify` | Check for estimate changes and notify verified subscribers |
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Scheduler
+
+The following jobs run automatically when the Laravel scheduler is active:
+
+```
+06:00 / 18:00  —  scrape    (fetch latest shipping data)
+06:30 / 18:30  —  notify    (email subscribers if estimates changed)
+```
+
+Enable with a cron entry:
+
+```
+* * * * * cd /path-to-project && php artisan schedule:run >> /dev/null 2>&1
+```
+
+## Deployment (Ploi.io)
+
+### Server requirements
+
+- PHP 8.3+
+- Node.js 20+
+- Supervisor (for queue worker)
+
+### System dependencies for Puppeteer
+
+```bash
+npx puppeteer install
+sudo apt-get install -y \
+  libgbm1 libnss3 libatk-bridge2.0-0 libdrm2 libxcomposite1 \
+  libxdamage1 libxrandr2 libgbm-dev libpango-1.0-0 libcairo2 \
+  libasound2t64
+```
+
+> **Note:** On Ubuntu 24.04+, use `libasound2t64` instead of `libasound2`.
+
+### Deploy script
+
+Append to Ploi defaults:
+
+```bash
+npm install
+npm run build
+npx puppeteer install
+touch database/database.sqlite
+php artisan migrate --force
+php artisan queue:restart
+```
+
+### Queue worker
+
+Add as a Ploi daemon:
+
+```bash
+php artisan queue:work --sleep=3 --tries=3 --max-time=3600
+```
+
+### Environment variables
+
+```env
+APP_URL=https://yourdomain.com
+DB_CONNECTION=sqlite
+DB_DATABASE=/full/path/to/database/database.sqlite
+QUEUE_CONNECTION=database
+ADMIN_EMAIL=your@email.com
+MAIL_MAILER=smtp
+MAIL_HOST=...
+MAIL_PORT=...
+MAIL_USERNAME=...
+MAIL_PASSWORD=...
+MAIL_FROM_ADDRESS=noreply@yourdomain.com
+MAIL_FROM_NAME="AYN Thor Ship Estimator"
+```
+
+## Project Structure
+
+```
+app/
+  Console/Commands/
+    Scrape.php                Scrape the AYN shipping dashboard
+    Notify.php                Notify subscribers of estimate changes
+    SeedData.php              Seed model variants + historical data
+  Http/Controllers/
+    HomeController.php        Inertia page with variants + batches
+    SubscribeController.php   Subscribe, verify, unsubscribe
+    ApiController.php         JSON data endpoint
+  Mail/
+    VerifySubscription.php    Email verification
+    EstimateChanged.php       Estimate change notification
+    ScrapeAlert.php           Admin alert on scrape failure
+  Models/
+    ModelVariant.php          10 AYN Thor variants
+    ShippingBatch.php         Shipping date + order range data points
+    Subscriber.php            Email notification subscribers
+    ScrapeLog.php             Scrape attempt history
+  Services/
+    ScraperService.php        Fetch, parse, upsert shipping data
+    EstimationService.php     Interpolation/extrapolation (PHP)
+
+resources/js/
+  Pages/Home.jsx              Single-page calculator
+  Components/
+    ModelSelector.jsx          Model variant button grid
+    OrderInput.jsx             4-digit order number input
+    ResultDisplay.jsx          Shipped/estimated/extrapolated result
+    SubscribeForm.jsx          Email notification signup
+    Toast.jsx                  Success/error notifications
+  lib/estimation.js            Client-side estimation logic
+```
+
+## How Estimation Works
+
+1. Shipping batches are collected as data points: `(date, cumulative_order_end)`
+2. If your order prefix is at or below the first data point, your order **already shipped**
+3. If it falls between two data points, the date is **interpolated** linearly
+4. If it's beyond all known data, the date is **extrapolated** from the last two points
+
+Both the JavaScript (client-side) and PHP (server-side for notifications) implementations produce identical results.
