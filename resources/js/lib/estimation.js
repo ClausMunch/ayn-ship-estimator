@@ -31,7 +31,26 @@ export function buildTimeline(batches) {
 
 function toTimestamp(dateStr) {
     if (!dateStr) return NaN;
-    return new Date(dateStr + 'T00:00:00Z').getTime();
+
+    if (dateStr instanceof Date) {
+        if (Number.isNaN(dateStr.getTime())) return NaN;
+        return Date.UTC(dateStr.getUTCFullYear(), dateStr.getUTCMonth(), dateStr.getUTCDate());
+    }
+
+    if (typeof dateStr === 'string') {
+        const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (match) {
+            const year = Number(match[1]);
+            const month = Number(match[2]) - 1;
+            const day = Number(match[3]);
+            return Date.UTC(year, month, day);
+        }
+    }
+
+    const parsed = new Date(dateStr);
+    if (Number.isNaN(parsed.getTime())) return NaN;
+
+    return Date.UTC(parsed.getUTCFullYear(), parsed.getUTCMonth(), parsed.getUTCDate());
 }
 
 function formatDate(ts) {
