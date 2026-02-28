@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import ModelSelector from '../Components/ModelSelector';
 import OrderInput from '../Components/OrderInput';
 import ResultDisplay from '../Components/ResultDisplay';
@@ -26,6 +26,29 @@ export default function Home({ variants, lastUpdated, csrfToken, signedTs }) {
     }, [orderInput, timeline]);
 
     const lastEnd = timeline.length > 0 ? timeline[timeline.length - 1].end : null;
+
+    // Track page view on mount
+    useEffect(() => {
+        fetch('/api/track/view', { method: 'POST', headers: { 'X-CSRF-TOKEN': csrfToken } }).catch(() => {});
+    }, []);
+
+    // Track estimations when result changes
+    const lastTracked = useRef(null);
+    useEffect(() => {
+        if (!result || !result.type) return;
+        const key = `${selectedVariantId}-${orderInput}-${result.type}`;
+        if (key === lastTracked.current) return;
+        lastTracked.current = key;
+        fetch('/api/track/estimation', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+            body: JSON.stringify({
+                model_variant_id: selectedVariantId,
+                order_prefix: parseInt(orderInput, 10),
+                result_type: result.type,
+            }),
+        }).catch(() => {});
+    }, [result]);
 
     return (
         <div className="min-h-screen bg-[#0c0c14] text-[#e0e0e8] font-mono flex flex-col items-center justify-center p-6">
