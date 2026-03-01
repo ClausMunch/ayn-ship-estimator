@@ -117,7 +117,9 @@ PUPPETEER_SKIP_DOWNLOAD=true npm install
 
 Then add to your `.env` (ensure it's on its own line):
 ```env
-BROWSERSHOT_CHROME_PATH=/usr/bin/chromium-browser
+# Prefer leaving this unset so Puppeteer can use its managed Chrome binary.
+# If you set a system path, avoid snap wrapper /usr/bin/chromium-browser under cron.
+# BROWSERSHOT_CHROME_PATH=/usr/bin/chromium
 BROWSERSHOT_NO_SANDBOX=true
 BROWSERSHOT_CHROMIUM_ARGS=disable-dev-shm-usage
 ```
@@ -125,9 +127,16 @@ BROWSERSHOT_CHROMIUM_ARGS=disable-dev-shm-usage
 Or via command line:
 ```bash
 echo "" >> .env  # Ensure file ends with newline
-echo "BROWSERSHOT_CHROME_PATH=/usr/bin/chromium-browser" >> .env
 echo "BROWSERSHOT_NO_SANDBOX=true" >> .env
 echo "BROWSERSHOT_CHROMIUM_ARGS=disable-dev-shm-usage" >> .env
+```
+
+If you previously set `PUPPETEER_EXECUTABLE_PATH` or `BROWSERSHOT_CHROME_PATH` to `/usr/bin/chromium-browser`, remove them and clear config cache:
+
+```bash
+sed -i '/^PUPPETEER_EXECUTABLE_PATH=/d' .env
+sed -i '/^BROWSERSHOT_CHROME_PATH=/d' .env
+php artisan config:clear
 ```
 
 > **Note:** On Ubuntu 24.04+, use `libasound2t64` instead of `libasound2` for x86-64 servers.
@@ -144,10 +153,12 @@ sudo apt-get install -y chromium-browser chromium-codecs-ffmpeg-extra
 npm install
 npm run build
 
-# Configure Browsershot to use system Chromium
-if ! grep -q "BROWSERSHOT_CHROME_PATH" .env; then
+# Install Puppeteer-managed Chrome (avoids snap chromium-browser cron issues)
+npx puppeteer install
+
+# Configure Browsershot launch flags (no explicit chrome path)
+if ! grep -q "BROWSERSHOT_NO_SANDBOX" .env; then
     echo "" >> .env
-  echo "BROWSERSHOT_CHROME_PATH=/usr/bin/chromium-browser" >> .env
   echo "BROWSERSHOT_NO_SANDBOX=true" >> .env
   echo "BROWSERSHOT_CHROMIUM_ARGS=disable-dev-shm-usage" >> .env
 fi

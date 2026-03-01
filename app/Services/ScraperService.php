@@ -41,7 +41,7 @@ class ScraperService
                     throw $primaryError;
                 }
 
-                $html = $this->makeBrowsershot()->bodyHtml();
+                $html = $this->makeBrowsershot(resetExecutablePathEnv: true)->bodyHtml();
                 $fallbackNote = sprintf(
                     'Configured browser failed (%s), fallback launch succeeded. Primary error: %s',
                     $chromePath,
@@ -65,11 +65,17 @@ class ScraperService
         }
     }
 
-    private function makeBrowsershot(?string $chromePath = null): Browsershot
+    private function makeBrowsershot(?string $chromePath = null, bool $resetExecutablePathEnv = false): Browsershot
     {
         $browsershot = Browsershot::url(self::URL)->setNodeModulePath(base_path(
             'node_modules/',
         ))->waitUntilNetworkIdle();
+
+        if ($resetExecutablePathEnv) {
+            $browsershot->setNodeEnv([
+                'PUPPETEER_EXECUTABLE_PATH' => '',
+            ]);
+        }
 
         if (config('services.browsershot.no_sandbox')) {
             $browsershot->noSandbox();
