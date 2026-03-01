@@ -9,8 +9,27 @@ export default function ScrapeLogs({ logs }) {
         setExpandedLogId((current) => (current === logId ? null : logId));
     };
 
+    const clearLogs = () => {
+        if (!confirm('Clear all scrape logs? This cannot be undone.')) {
+            return;
+        }
+
+        router.delete('/admin/scrape-logs', {
+            preserveScroll: true,
+        });
+    };
+
     return (
         <AdminLayout title="Scrape Logs">
+            <div className="flex justify-end mb-4">
+                <button
+                    onClick={clearLogs}
+                    className="px-3 py-1.5 rounded text-xs font-mono text-red-300 bg-[#2a0f13] border border-[#5a1a24] hover:bg-[#35131a] cursor-pointer transition-colors"
+                >
+                    Clear Logs
+                </button>
+            </div>
+
             <div className="bg-[#15151f] border border-[#2a2a3a] rounded-xl overflow-hidden">
                 <table className="w-full text-xs font-mono">
                     <thead>

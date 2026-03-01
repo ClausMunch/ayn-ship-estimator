@@ -33,6 +33,7 @@ Route::middleware('auth')
         Route::delete('/subscribers/{subscriber}', [SubscribersController::class, 'destroy']);
         Route::get('/analytics', [AnalyticsController::class, 'index']);
         Route::get('/scrape-logs', [ScrapeLogsController::class, 'index']);
+        Route::delete('/scrape-logs', [ScrapeLogsController::class, 'clear']);
         Route::get('/queue', [QueueController::class, 'index']);
         Route::post('/queue/failed/{id}/retry', [QueueController::class, 'retryFailed']);
     });
