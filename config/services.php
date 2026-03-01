@@ -36,7 +36,12 @@ return [
     ],
 
     'browsershot' => [
-        'chrome_path' => env('BROWSERSHOT_CHROME_PATH'),
+        'chrome_path' => env('BROWSERSHOT_CHROME_PATH') ?: env('PUPPETEER_EXECUTABLE_PATH'),
+        'no_sandbox' => env('BROWSERSHOT_NO_SANDBOX', true),
+        'chromium_args' => array_values(array_filter(array_map(
+            'trim',
+            explode(',', (string) env('BROWSERSHOT_CHROMIUM_ARGS', 'disable-dev-shm-usage'))
+        ))),
     ],
 
 ];

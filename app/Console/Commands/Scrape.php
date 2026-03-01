@@ -56,6 +56,10 @@ class Scrape extends Command
             );
         }
 
+        if ($result->error) {
+            $this->warn("Scrape note: {$result->error}");
+        }
+
         $this->info("Scrape complete: {$result->recordsFound} records found, {$result->recordsNew} new. ({$result->durationMs}ms)");
 
         return self::SUCCESS;

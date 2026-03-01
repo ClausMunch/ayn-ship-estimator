@@ -117,13 +117,17 @@ PUPPETEER_SKIP_DOWNLOAD=true npm install
 
 Then add to your `.env` (ensure it's on its own line):
 ```env
-PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+BROWSERSHOT_CHROME_PATH=/usr/bin/chromium-browser
+BROWSERSHOT_NO_SANDBOX=true
+BROWSERSHOT_CHROMIUM_ARGS=disable-dev-shm-usage
 ```
 
 Or via command line:
 ```bash
 echo "" >> .env  # Ensure file ends with newline
-echo "PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser" >> .env
+echo "BROWSERSHOT_CHROME_PATH=/usr/bin/chromium-browser" >> .env
+echo "BROWSERSHOT_NO_SANDBOX=true" >> .env
+echo "BROWSERSHOT_CHROMIUM_ARGS=disable-dev-shm-usage" >> .env
 ```
 
 > **Note:** On Ubuntu 24.04+, use `libasound2t64` instead of `libasound2` for x86-64 servers.
@@ -140,10 +144,12 @@ sudo apt-get install -y chromium-browser chromium-codecs-ffmpeg-extra
 npm install
 npm run build
 
-# Configure Puppeteer to use system Chromium
-if ! grep -q "PUPPETEER_EXECUTABLE_PATH" .env; then
+# Configure Browsershot to use system Chromium
+if ! grep -q "BROWSERSHOT_CHROME_PATH" .env; then
     echo "" >> .env
-    echo "PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser" >> .env
+  echo "BROWSERSHOT_CHROME_PATH=/usr/bin/chromium-browser" >> .env
+  echo "BROWSERSHOT_NO_SANDBOX=true" >> .env
+  echo "BROWSERSHOT_CHROMIUM_ARGS=disable-dev-shm-usage" >> .env
 fi
 
 touch database/database.sqlite

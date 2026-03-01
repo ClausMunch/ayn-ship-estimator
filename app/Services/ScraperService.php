@@ -29,18 +29,25 @@ class ScraperService
     public function run(): ScrapeResult
     {
         $startTime = hrtime(true);
+        $fallbackNote = null;
 
         try {
-            $browsershot = Browsershot::url(self::URL)
-                ->setNodeModulePath(base_path('node_modules/'))
-                ->waitUntilNetworkIdle();
+            $chromePath = config('services.browsershot.chrome_path');
 
-            // Use system Chromium if configured (needed for ARM servers)
-            if ($chromePath = config('services.browsershot.chrome_path')) {
-                $browsershot->setChromePath($chromePath);
+            try {
+                $html = $this->makeBrowsershot($chromePath)->bodyHtml();
+            } catch (\Throwable $primaryError) {
+                if (! $chromePath) {
+                    throw $primaryError;
+                }
+
+                $html = $this->makeBrowsershot()->bodyHtml();
+                $fallbackNote = sprintf(
+                    'Configured browser failed (%s), fallback launch succeeded. Primary error: %s',
+                    $chromePath,
+                    $primaryError->getMessage()
+                );
             }
-
-            $html = $browsershot->bodyHtml();
 
             $records = $this->parse($html);
             $new = $this->upsert($records);
@@ -49,6 +56,7 @@ class ScraperService
                 status: 'success',
                 recordsFound: count($records),
                 recordsNew: $new,
+                error: $fallbackNote,
                 durationMs: $this->elapsed($startTime),
                 htmlSnippet: mb_substr($html, 0, 2000),
             );
@@ -59,6 +67,28 @@ class ScraperService
                 durationMs: $this->elapsed($startTime),
             );
         }
+    }
+
+    private function makeBrowsershot(?string $chromePath = null): Browsershot
+    {
+        $browsershot = Browsershot::url(self::URL)
+            ->setNodeModulePath(base_path('node_modules/'))
+            ->waitUntilNetworkIdle();
+
+        if (config('services.browsershot.no_sandbox')) {
+            $browsershot->noSandbox();
+        }
+
+        $chromiumArgs = config('services.browsershot.chromium_args', []);
+        if (! empty($chromiumArgs)) {
+            $browsershot->addChromiumArguments($chromiumArgs);
+        }
+
+        if ($chromePath) {
+            $browsershot->setChromePath($chromePath);
+        }
+
+        return $browsershot;
     }
 
     /**
