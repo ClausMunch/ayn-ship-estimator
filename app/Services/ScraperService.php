@@ -40,7 +40,7 @@ class ScraperService
             try {
                 $html = $this->makeBrowsershot($configuredChromePath)->bodyHtml();
             } catch (\Throwable $primaryError) {
-                $browserErrors[] = 'primary='.$primaryError->getMessage();
+                $browserErrors[] = 'primary=' . $primaryError->getMessage();
 
                 try {
                     $usedFallback = true;
@@ -51,14 +51,14 @@ class ScraperService
                         $primaryError->getMessage(),
                     );
                 } catch (\Throwable $fallbackError) {
-                    $browserErrors[] = 'fallback='.$fallbackError->getMessage();
+                    $browserErrors[] = 'fallback=' . $fallbackError->getMessage();
                     $usedHttpFallback = true;
                     $html = $this->fetchHtmlViaHttp();
 
-                    $fallbackNote = sprintf(
-                        'Browsershot failed, HTTP fallback succeeded. %s',
-                        implode(' | ', $browserErrors),
-                    );
+                    $fallbackNote = sprintf('Browsershot failed, HTTP fallback succeeded. %s', implode(
+                        ' | ',
+                        $browserErrors,
+                    ));
                 }
             }
 
@@ -84,8 +84,11 @@ class ScraperService
         }
     }
 
-    private function buildRuntimeContext(?string $configuredChromePath, bool $usedFallback, bool $usedHttpFallback): string
-    {
+    private function buildRuntimeContext(
+        ?string $configuredChromePath,
+        bool $usedFallback,
+        bool $usedHttpFallback,
+    ): string {
         $runtimeUser = getenv('USER') ?: get_current_user();
 
         return sprintf(
@@ -100,14 +103,12 @@ class ScraperService
 
     private function fetchHtmlViaHttp(): string
     {
-        $response = Http::timeout(30)
-            ->withHeaders([
-                'User-Agent' => 'Mozilla/5.0 (X11; Linux arm64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36',
-            ])
-            ->get(self::URL);
+        $response = Http::timeout(30)->withHeaders([
+            'User-Agent' => 'Mozilla/5.0 (X11; Linux arm64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36',
+        ])->get(self::URL);
 
-        if (! $response->successful()) {
-            throw new \RuntimeException('HTTP fallback failed with status '.$response->status());
+        if (!$response->successful()) {
+            throw new \RuntimeException('HTTP fallback failed with status ' . $response->status());
         }
 
         return $response->body();
