@@ -1,6 +1,8 @@
 import { router } from '@inertiajs/react';
 import AdminLayout from '../../Components/Admin/AdminLayout';
 import DataTable from '../../Components/Admin/DataTable';
+import Toast from '../../Components/Toast';
+import { useState } from 'react';
 
 const COLUMNS = [
     { key: 'email', label: 'Email' },
@@ -26,6 +28,8 @@ const COLUMNS = [
 ];
 
 export default function Subscribers({ subscribers, sort, direction }) {
+    const [toast, setToast] = useState(null);
+
     const handleSort = (key) => {
         router.get('/admin/subscribers', {
             sort: key,
@@ -38,8 +42,29 @@ export default function Subscribers({ subscribers, sort, direction }) {
         router.delete(`/admin/subscribers/${subscriber.id}`);
     };
 
+    const handleResendVerification = (subscriber) => {
+        router.post(`/admin/subscribers/${subscriber.id}/resend-verification`, {}, {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                setToast({ message: `Verification email queued for ${subscriber.email}.`, type: 'success' });
+            },
+            onError: (errors) => {
+                setToast({ message: errors.resend || 'Failed to queue verification email.', type: 'error' });
+            },
+        });
+    };
+
     return (
         <AdminLayout title="Subscribers">
+            {toast && (
+                <Toast
+                    message={toast.message}
+                    type={toast.type}
+                    duration={3500}
+                />
+            )}
+
             <DataTable
                 columns={COLUMNS}
                 rows={subscribers.data}
@@ -47,12 +72,22 @@ export default function Subscribers({ subscribers, sort, direction }) {
                 direction={direction}
                 onSort={handleSort}
                 actions={(row) => (
-                    <button
-                        onClick={() => handleDelete(row)}
-                        className="text-red-400 hover:text-red-300 text-[10px] cursor-pointer"
-                    >
-                        Delete
-                    </button>
+                    <div className="flex items-center justify-end gap-3">
+                        {!row.email_verified_at && (
+                            <button
+                                onClick={() => handleResendVerification(row)}
+                                className="text-indigo-300 hover:text-indigo-200 text-[10px] cursor-pointer"
+                            >
+                                Resend verification
+                            </button>
+                        )}
+                        <button
+                            onClick={() => handleDelete(row)}
+                            className="text-red-400 hover:text-red-300 text-[10px] cursor-pointer"
+                        >
+                            Delete
+                        </button>
+                    </div>
                 )}
             />
 

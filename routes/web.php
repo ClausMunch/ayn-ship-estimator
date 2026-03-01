@@ -22,6 +22,7 @@ Route::middleware('auth')->prefix('admin')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/', [DashboardController::class, 'index']);
     Route::get('/subscribers', [SubscribersController::class, 'index']);
+    Route::post('/subscribers/{subscriber}/resend-verification', [SubscribersController::class, 'resendVerification']);
     Route::delete('/subscribers/{subscriber}', [SubscribersController::class, 'destroy']);
     Route::get('/analytics', [AnalyticsController::class, 'index']);
     Route::get('/scrape-logs', [ScrapeLogsController::class, 'index']);
