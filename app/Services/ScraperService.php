@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\ModelVariant;
 use App\Models\ShippingBatch;
+use Illuminate\Support\Facades\Http;
 use Spatie\Browsershot\Browsershot;
 
 class ScraperService
@@ -31,23 +32,34 @@ class ScraperService
         $startTime = hrtime(true);
         $fallbackNote = null;
         $usedFallback = false;
+        $usedHttpFallback = false;
         $configuredChromePath = config('services.browsershot.chrome_path');
+        $browserErrors = [];
 
         try {
             try {
                 $html = $this->makeBrowsershot($configuredChromePath)->bodyHtml();
             } catch (\Throwable $primaryError) {
-                if (!$configuredChromePath) {
-                    throw $primaryError;
-                }
+                $browserErrors[] = 'primary='.$primaryError->getMessage();
 
-                $usedFallback = true;
-                $html = $this->makeBrowsershot(resetExecutablePathEnv: true)->bodyHtml();
-                $fallbackNote = sprintf(
-                    'Configured browser failed (%s), fallback launch succeeded. Primary error: %s',
-                    $configuredChromePath,
-                    $primaryError->getMessage(),
-                );
+                try {
+                    $usedFallback = true;
+                    $html = $this->makeBrowsershot(resetExecutablePathEnv: true)->bodyHtml();
+                    $fallbackNote = sprintf(
+                        'Configured browser failed (%s), fallback launch succeeded. Primary error: %s',
+                        $configuredChromePath ?: '(unset)',
+                        $primaryError->getMessage(),
+                    );
+                } catch (\Throwable $fallbackError) {
+                    $browserErrors[] = 'fallback='.$fallbackError->getMessage();
+                    $usedHttpFallback = true;
+                    $html = $this->fetchHtmlViaHttp();
+
+                    $fallbackNote = sprintf(
+                        'Browsershot failed, HTTP fallback succeeded. %s',
+                        implode(' | ', $browserErrors),
+                    );
+                }
             }
 
             $records = $this->parse($html);
@@ -58,7 +70,7 @@ class ScraperService
                 recordsFound: count($records),
                 recordsNew: $new,
                 error: $fallbackNote,
-                runtimeContext: $this->buildRuntimeContext($configuredChromePath, $usedFallback),
+                runtimeContext: $this->buildRuntimeContext($configuredChromePath, $usedFallback, $usedHttpFallback),
                 durationMs: $this->elapsed($startTime),
                 htmlSnippet: mb_substr($html, 0, 2000),
             );
@@ -66,23 +78,39 @@ class ScraperService
             return new ScrapeResult(
                 status: 'failed',
                 error: $e->getMessage(),
-                runtimeContext: $this->buildRuntimeContext($configuredChromePath, $usedFallback),
+                runtimeContext: $this->buildRuntimeContext($configuredChromePath, $usedFallback, $usedHttpFallback),
                 durationMs: $this->elapsed($startTime),
             );
         }
     }
 
-    private function buildRuntimeContext(?string $configuredChromePath, bool $usedFallback): string
+    private function buildRuntimeContext(?string $configuredChromePath, bool $usedFallback, bool $usedHttpFallback): string
     {
         $runtimeUser = getenv('USER') ?: get_current_user();
 
         return sprintf(
-            'user=%s; configured_chrome_path=%s; env_puppeteer_executable_path=%s; fallback=%s',
+            'user=%s; configured_chrome_path=%s; env_puppeteer_executable_path=%s; fallback=%s; http_fallback=%s',
             $runtimeUser ?: 'unknown',
             $configuredChromePath ?: '(unset)',
             getenv('PUPPETEER_EXECUTABLE_PATH') ?: '(unset)',
             $usedFallback ? 'yes' : 'no',
+            $usedHttpFallback ? 'yes' : 'no',
         );
+    }
+
+    private function fetchHtmlViaHttp(): string
+    {
+        $response = Http::timeout(30)
+            ->withHeaders([
+                'User-Agent' => 'Mozilla/5.0 (X11; Linux arm64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36',
+            ])
+            ->get(self::URL);
+
+        if (! $response->successful()) {
+            throw new \RuntimeException('HTTP fallback failed with status '.$response->status());
+        }
+
+        return $response->body();
     }
 
     private function makeBrowsershot(?string $chromePath = null, bool $resetExecutablePathEnv = false): Browsershot
