@@ -25,7 +25,7 @@ class SubscribeController extends Controller
             }
 
             // Resend verification
-            Mail::to($subscriber->email)->queue((new VerifySubscription($subscriber))->onQueue('mail'));
+            Mail::to($subscriber->email)->queue(new VerifySubscription($subscriber)->onQueue('mail'));
 
             return response()->json(['message' => 'Verification email resent. Please check your inbox.']);
         }
@@ -38,7 +38,7 @@ class SubscribeController extends Controller
             'unsubscribe_token' => Str::random(64),
         ]);
 
-        Mail::to($subscriber->email)->queue((new VerifySubscription($subscriber))->onQueue('mail'));
+        Mail::to($subscriber->email)->queue(new VerifySubscription($subscriber)->onQueue('mail'));
 
         return response()->json(['message' => 'Check your email to verify your subscription.']);
     }
