@@ -1,7 +1,14 @@
 import { router } from '@inertiajs/react';
+import { useState } from 'react';
 import AdminLayout from '../../Components/Admin/AdminLayout';
 
 export default function ScrapeLogs({ logs }) {
+    const [expandedLogId, setExpandedLogId] = useState(null);
+
+    const toggleExpanded = (logId) => {
+        setExpandedLogId((current) => (current === logId ? null : logId));
+    };
+
     return (
         <AdminLayout title="Scrape Logs">
             <div className="bg-[#15151f] border border-[#2a2a3a] rounded-xl overflow-hidden">
@@ -24,26 +31,55 @@ export default function ScrapeLogs({ logs }) {
                                 </td>
                             </tr>
                         ) : (
-                            logs.data.map((log) => (
-                                <tr key={log.id} className="border-b border-[#1a1a28] hover:bg-[#1a1a28]">
-                                    <td className="px-4 py-3 text-[#a8a8bc]">
-                                        {new Date(log.created_at).toLocaleString()}
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <span className={log.status === 'success' ? 'text-green-400' : 'text-red-400'}>
-                                            {log.status}
-                                        </span>
-                                    </td>
-                                    <td className="px-4 py-3 text-[#a8a8bc]">{log.records_found}</td>
-                                    <td className="px-4 py-3 text-[#a8a8bc]">{log.records_new}</td>
-                                    <td className="px-4 py-3 text-[#a8a8bc]">
-                                        {log.duration_ms ? `${log.duration_ms}ms` : '\u2014'}
-                                    </td>
-                                    <td className="px-4 py-3 text-red-400 max-w-xs truncate">
-                                        {log.error_message || '\u2014'}
-                                    </td>
-                                </tr>
-                            ))
+                            logs.data.flatMap((log) => {
+                                const isExpanded = expandedLogId === log.id;
+                                const hasError = !!log.error_message;
+
+                                const rows = [
+                                    <tr key={`row-${log.id}`} className="border-b border-[#1a1a28] hover:bg-[#1a1a28]">
+                                        <td className="px-4 py-3 text-[#a8a8bc]">
+                                            {new Date(log.created_at).toLocaleString()}
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <span className={log.status === 'success' ? 'text-green-400' : 'text-red-400'}>
+                                                {log.status}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-3 text-[#a8a8bc]">{log.records_found}</td>
+                                        <td className="px-4 py-3 text-[#a8a8bc]">{log.records_new}</td>
+                                        <td className="px-4 py-3 text-[#a8a8bc]">
+                                            {log.duration_ms ? `${log.duration_ms}ms` : '\u2014'}
+                                        </td>
+                                        <td className="px-4 py-3 text-red-400 max-w-xs">
+                                            {hasError ? (
+                                                <>
+                                                    <div className="truncate">{log.error_message}</div>
+                                                    <button
+                                                        onClick={() => toggleExpanded(log.id)}
+                                                        className="mt-1 text-[10px] text-indigo-300 hover:text-indigo-200 cursor-pointer"
+                                                    >
+                                                        {isExpanded ? 'Hide' : 'View full'}
+                                                    </button>
+                                                </>
+                                            ) : '\u2014'}
+                                        </td>
+                                    </tr>,
+                                ];
+
+                                if (hasError && isExpanded) {
+                                    rows.push(
+                                        <tr key={`expanded-${log.id}`} className="border-b border-[#1a1a28] bg-[#11111a]">
+                                            <td colSpan={6} className="px-4 py-3">
+                                                <div className="text-[11px] text-red-300 whitespace-pre-wrap wrap-break-word">
+                                                    {log.error_message}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                }
+
+                                return rows;
+                            })
                         )}
                     </tbody>
                 </table>
