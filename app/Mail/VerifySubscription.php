@@ -20,23 +20,17 @@ class VerifySubscription extends Mailable implements ShouldQueue
 
     public function envelope(): Envelope
     {
-        return new Envelope(
-            subject: 'Verify your shipping estimate subscription',
-        );
+        return new Envelope(subject: 'Verify your shipping estimate subscription');
     }
 
     public function content(): Content
     {
         $subscriber = $this->subscriber->load('modelVariant');
 
-        return new Content(
-            view: 'mail.verify',
-            text: 'mail.verify-text',
-            with: [
-                'verifyUrl' => url("/verify/{$subscriber->verification_token}"),
-                'modelName' => $subscriber->modelVariant->name,
-                'orderPrefix' => $subscriber->order_prefix,
-            ],
-        );
+        return new Content(view: 'mail.verify', text: 'mail.verify-text', with: [
+            'verifyUrl' => url("/verify/{$subscriber->verification_token}"),
+            'modelName' => $subscriber->modelVariant->name,
+            'orderPrefix' => $subscriber->order_prefix,
+        ]);
     }
 }
