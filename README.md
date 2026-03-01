@@ -13,7 +13,7 @@ A single-purpose shipping estimate tool for AYN Thor handhelds. Pick your model 
 ## Tech Stack
 
 | Layer | Technology |
-|-------|-----------|
+| ----- | ---------- |
 | Backend | Laravel 12, PHP 8.4+ |
 | Database | SQLite |
 | Frontend | Inertia.js + React |
@@ -65,7 +65,7 @@ npm run dev      # or: bun run dev
 ## Artisan Commands
 
 | Command | Description |
-|---------|-------------|
+| ------- | ----------- |
 | `php artisan seed:data` | Seed model variants and historical shipping batches (idempotent) |
 | `php artisan scrape` | Scrape the AYN shipping dashboard and update batch data |
 | `php artisan notify` | Check for estimate changes and notify verified subscribers |
@@ -74,16 +74,18 @@ npm run dev      # or: bun run dev
 
 The following jobs run automatically when the Laravel scheduler is active:
 
-```
+```text
 06:00 / 18:00  —  scrape    (fetch latest shipping data)
 06:30 / 18:30  —  notify    (email subscribers if estimates changed)
 ```
 
 Enable with a cron entry:
 
-```
+```text
 * * * * * cd /path-to-project && php artisan schedule:run >> /dev/null 2>&1
 ```
+
+If scraping uses Snap Chromium, prefer running the scheduler with Supervisor (`php artisan schedule:work`) instead of cron to avoid Snap cgroup restrictions in cron context.
 
 ## Deployment (Ploi.io)
 
@@ -108,34 +110,37 @@ sudo apt-get install -y \
 **For ARM servers (e.g., AWS Graviton):**
 
 ```bash
-# Install Chromium for ARM instead of Puppeteer's bundled Chrome
+# Install Chromium package available on your distro
 sudo apt-get install -y chromium-browser chromium-codecs-ffmpeg-extra
-
-# Skip Puppeteer's binary download
-PUPPETEER_SKIP_DOWNLOAD=true npm install
 ```
 
+> On some Ubuntu ARM systems, Chromium is provided only via Snap (`/snap/bin/chromium`) and `/usr/bin/chromium` does not exist.
+
 Then add to your `.env` (ensure it's on its own line):
+
 ```env
-# Prefer leaving this unset so Puppeteer can use its managed Chrome binary.
-# If you set a system path, avoid snap wrapper /usr/bin/chromium-browser under cron.
-# BROWSERSHOT_CHROME_PATH=/usr/bin/chromium
+# IMPORTANT: each key must be on its own line.
+# A missing newline can corrupt launch args, e.g. disable-dev-shm-usageBROWSERSHOT_CHROME_PATH=...
+BROWSERSHOT_CHROME_PATH=/snap/bin/chromium
 BROWSERSHOT_NO_SANDBOX=true
 BROWSERSHOT_CHROMIUM_ARGS=disable-dev-shm-usage
 ```
 
 Or via command line:
+
 ```bash
 echo "" >> .env  # Ensure file ends with newline
+echo "BROWSERSHOT_CHROME_PATH=/snap/bin/chromium" >> .env
 echo "BROWSERSHOT_NO_SANDBOX=true" >> .env
 echo "BROWSERSHOT_CHROMIUM_ARGS=disable-dev-shm-usage" >> .env
 ```
 
-If you previously set `PUPPETEER_EXECUTABLE_PATH` or `BROWSERSHOT_CHROME_PATH` to `/usr/bin/chromium-browser`, remove them and clear config cache:
+If you previously set `PUPPETEER_EXECUTABLE_PATH` or a bad `BROWSERSHOT_*` combination, recreate these keys cleanly and clear config cache:
 
 ```bash
 sed -i '/^PUPPETEER_EXECUTABLE_PATH=/d' .env
-sed -i '/^BROWSERSHOT_CHROME_PATH=/d' .env
+sed -i '/^BROWSERSHOT_CHROME_PATH=/d;/^BROWSERSHOT_CHROMIUM_ARGS=/d;/^BROWSERSHOT_NO_SANDBOX=/d' .env
+printf "\nBROWSERSHOT_CHROME_PATH=/snap/bin/chromium\nBROWSERSHOT_NO_SANDBOX=true\nBROWSERSHOT_CHROMIUM_ARGS=disable-dev-shm-usage\n" >> .env
 php artisan config:clear
 ```
 
@@ -153,12 +158,10 @@ sudo apt-get install -y chromium-browser chromium-codecs-ffmpeg-extra
 npm install
 npm run build
 
-# Install Puppeteer-managed Chrome (avoids snap chromium-browser cron issues)
-npx puppeteer install
-
 # Configure Browsershot launch flags (no explicit chrome path)
-if ! grep -q "BROWSERSHOT_NO_SANDBOX" .env; then
+if ! grep -q "BROWSERSHOT_CHROME_PATH" .env; then
     echo "" >> .env
+  echo "BROWSERSHOT_CHROME_PATH=/snap/bin/chromium" >> .env
   echo "BROWSERSHOT_NO_SANDBOX=true" >> .env
   echo "BROWSERSHOT_CHROMIUM_ARGS=disable-dev-shm-usage" >> .env
 fi
@@ -175,6 +178,19 @@ chgrp -R www-data storage bootstrap/cache
 php artisan config:clear
 php artisan queue:restart
 ```
+
+### Scrape troubleshooting (Linux ARM)
+
+```bash
+# Verify effective Browsershot config
+php artisan tinker --execute="dump(config('services.browsershot'));"
+
+# Verify browser paths available on host
+command -v chromium chromium-browser
+ls -l /snap/bin/chromium /usr/bin/chromium-browser /usr/bin/chromium 2>/dev/null || true
+```
+
+If scrape errors include `Could not find Chrome (ver. ...)`, the configured executable path is not being applied (usually malformed `.env` or missing newline between keys).
 
 **For x86-64 servers:**
 
@@ -221,7 +237,7 @@ MAIL_FROM_NAME="AYN Thor Ship Estimator"
 
 ## Project Structure
 
-```
+```text
 app/
   Console/Commands/
     Scrape.php                Scrape the AYN shipping dashboard
