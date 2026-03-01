@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AnalyticsController;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\QueueController;
 use App\Http\Controllers\Admin\ScrapeLogsController;
 use App\Http\Controllers\Admin\SubscribersController;
 use App\Http\Controllers\HomeController;
@@ -32,4 +33,6 @@ Route::middleware('auth')
         Route::delete('/subscribers/{subscriber}', [SubscribersController::class, 'destroy']);
         Route::get('/analytics', [AnalyticsController::class, 'index']);
         Route::get('/scrape-logs', [ScrapeLogsController::class, 'index']);
+        Route::get('/queue', [QueueController::class, 'index']);
+        Route::post('/queue/failed/{id}/retry', [QueueController::class, 'retryFailed']);
     });

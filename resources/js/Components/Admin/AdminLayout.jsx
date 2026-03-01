@@ -5,6 +5,7 @@ const NAV = [
     { label: 'Subscribers', href: '/admin/subscribers' },
     { label: 'Analytics', href: '/admin/analytics' },
     { label: 'Scrape Logs', href: '/admin/scrape-logs' },
+    { label: 'Queue', href: '/admin/queue' },
 ];
 
 export default function AdminLayout({ children, title }) {
