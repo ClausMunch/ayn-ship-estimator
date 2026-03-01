@@ -20,13 +20,14 @@ export default function ScrapeLogs({ logs }) {
                             <th className="px-4 py-3 text-left text-[10px] uppercase tracking-[1.5px] text-[#555570] font-semibold">Found</th>
                             <th className="px-4 py-3 text-left text-[10px] uppercase tracking-[1.5px] text-[#555570] font-semibold">New</th>
                             <th className="px-4 py-3 text-left text-[10px] uppercase tracking-[1.5px] text-[#555570] font-semibold">Duration</th>
+                            <th className="px-4 py-3 text-left text-[10px] uppercase tracking-[1.5px] text-[#555570] font-semibold">Runtime</th>
                             <th className="px-4 py-3 text-left text-[10px] uppercase tracking-[1.5px] text-[#555570] font-semibold">Error</th>
                         </tr>
                     </thead>
                     <tbody>
                         {logs.data.length === 0 ? (
                             <tr>
-                                <td colSpan={6} className="px-4 py-8 text-center text-[#555570]">
+                                <td colSpan={7} className="px-4 py-8 text-center text-[#555570]">
                                     No scrape logs yet
                                 </td>
                             </tr>
@@ -50,6 +51,9 @@ export default function ScrapeLogs({ logs }) {
                                         <td className="px-4 py-3 text-[#a8a8bc]">
                                             {log.duration_ms ? `${log.duration_ms}ms` : '\u2014'}
                                         </td>
+                                        <td className="px-4 py-3 text-[#a8a8bc] max-w-xs truncate" title={log.runtime_context || ''}>
+                                            {log.runtime_context || '\u2014'}
+                                        </td>
                                         <td className="px-4 py-3 text-red-400 max-w-xs">
                                             {hasError ? (
                                                 <>
@@ -69,7 +73,7 @@ export default function ScrapeLogs({ logs }) {
                                 if (hasError && isExpanded) {
                                     rows.push(
                                         <tr key={`expanded-${log.id}`} className="border-b border-[#1a1a28] bg-[#11111a]">
-                                            <td colSpan={6} className="px-4 py-3">
+                                            <td colSpan={7} className="px-4 py-3">
                                                 <div className="text-[11px] text-red-300 whitespace-pre-wrap wrap-break-word">
                                                     {log.error_message}
                                                 </div>

@@ -9,6 +9,7 @@ class ScrapeResult
         public readonly int $recordsFound = 0,
         public readonly int $recordsNew = 0,
         public readonly ?string $error = null,
+        public readonly ?string $runtimeContext = null,
         public readonly ?int $durationMs = null,
         public readonly ?string $htmlSnippet = null,
     ) {}

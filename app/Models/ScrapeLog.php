@@ -13,6 +13,7 @@ class ScrapeLog extends Model
         'records_found',
         'records_new',
         'error_message',
+        'runtime_context',
         'duration_ms',
         'created_at',
     ];

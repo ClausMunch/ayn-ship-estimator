@@ -25,6 +25,7 @@ class Scrape extends Command
             'records_found' => $result->recordsFound,
             'records_new' => $result->recordsNew,
             'error_message' => $result->error,
+            'runtime_context' => $result->runtimeContext,
             'duration_ms' => $result->durationMs,
             'created_at' => now(),
         ]);

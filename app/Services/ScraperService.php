@@ -30,21 +30,22 @@ class ScraperService
     {
         $startTime = hrtime(true);
         $fallbackNote = null;
+        $usedFallback = false;
+        $configuredChromePath = config('services.browsershot.chrome_path');
 
         try {
-            $chromePath = config('services.browsershot.chrome_path');
-
             try {
-                $html = $this->makeBrowsershot($chromePath)->bodyHtml();
+                $html = $this->makeBrowsershot($configuredChromePath)->bodyHtml();
             } catch (\Throwable $primaryError) {
-                if (!$chromePath) {
+                if (!$configuredChromePath) {
                     throw $primaryError;
                 }
 
+                $usedFallback = true;
                 $html = $this->makeBrowsershot(resetExecutablePathEnv: true)->bodyHtml();
                 $fallbackNote = sprintf(
                     'Configured browser failed (%s), fallback launch succeeded. Primary error: %s',
-                    $chromePath,
+                    $configuredChromePath,
                     $primaryError->getMessage(),
                 );
             }
@@ -57,12 +58,31 @@ class ScraperService
                 recordsFound: count($records),
                 recordsNew: $new,
                 error: $fallbackNote,
+                runtimeContext: $this->buildRuntimeContext($configuredChromePath, $usedFallback),
                 durationMs: $this->elapsed($startTime),
                 htmlSnippet: mb_substr($html, 0, 2000),
             );
         } catch (\Throwable $e) {
-            return new ScrapeResult(status: 'failed', error: $e->getMessage(), durationMs: $this->elapsed($startTime));
+            return new ScrapeResult(
+                status: 'failed',
+                error: $e->getMessage(),
+                runtimeContext: $this->buildRuntimeContext($configuredChromePath, $usedFallback),
+                durationMs: $this->elapsed($startTime),
+            );
         }
+    }
+
+    private function buildRuntimeContext(?string $configuredChromePath, bool $usedFallback): string
+    {
+        $runtimeUser = getenv('USER') ?: get_current_user();
+
+        return sprintf(
+            'user=%s; configured_chrome_path=%s; env_puppeteer_executable_path=%s; fallback=%s',
+            $runtimeUser ?: 'unknown',
+            $configuredChromePath ?: '(unset)',
+            getenv('PUPPETEER_EXECUTABLE_PATH') ?: '(unset)',
+            $usedFallback ? 'yes' : 'no',
+        );
     }
 
     private function makeBrowsershot(?string $chromePath = null, bool $resetExecutablePathEnv = false): Browsershot
