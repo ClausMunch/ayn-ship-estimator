@@ -33,11 +33,10 @@ export default function AdminLayout({ children, title }) {
                             <a
                                 key={item.href}
                                 href={item.href}
-                                className={`block px-3 py-2 rounded-lg text-xs font-mono transition-colors ${
-                                    active
+                                className={`block px-3 py-2 rounded-lg text-xs font-mono transition-colors ${active
                                         ? 'bg-[#1a1a28] text-white border border-[#2a2a3a]'
                                         : 'text-[#a8a8bc] hover:text-white hover:bg-[#1a1a28]'
-                                }`}
+                                    }`}
                             >
                                 {item.label}
                             </a>
