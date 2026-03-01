@@ -23,6 +23,7 @@ Route::middleware('auth')
     ->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/', [DashboardController::class, 'index']);
+        Route::post('/scrape', [DashboardController::class, 'scrape']);
         Route::get('/subscribers', [SubscribersController::class, 'index']);
         Route::post('/subscribers/{subscriber}/resend-verification', [
             SubscribersController::class,

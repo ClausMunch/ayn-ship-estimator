@@ -8,6 +8,8 @@ use App\Models\PageView;
 use App\Models\ScrapeLog;
 use App\Models\Subscriber;
 use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -59,5 +61,12 @@ class DashboardController extends Controller
             ] : null,
             'lastScrape' => $lastScrape,
         ]);
+    }
+
+    public function scrape(): RedirectResponse
+    {
+        Artisan::call('scrape');
+
+        return back();
     }
 }
