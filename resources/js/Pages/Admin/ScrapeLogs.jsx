@@ -4,6 +4,7 @@ import AdminLayout from '../../Components/Admin/AdminLayout';
 
 export default function ScrapeLogs({ logs }) {
     const [expandedLogId, setExpandedLogId] = useState(null);
+    const [scraping, setScraping] = useState(false);
 
     const toggleExpanded = (logId) => {
         setExpandedLogId((current) => (current === logId ? null : logId));
@@ -19,9 +20,25 @@ export default function ScrapeLogs({ logs }) {
         });
     };
 
+    const runScrapeNow = () => {
+        setScraping(true);
+
+        router.post('/admin/scrape', {}, {
+            preserveScroll: true,
+            onFinish: () => setScraping(false),
+        });
+    };
+
     return (
         <AdminLayout title="Scrape Logs">
-            <div className="flex justify-end mb-4">
+            <div className="flex justify-end mb-4 gap-2">
+                <button
+                    onClick={runScrapeNow}
+                    disabled={scraping}
+                    className="px-3 py-1.5 rounded text-xs font-mono text-white bg-[#2a2e5a] border border-[#3a4380] hover:bg-[#313868] cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    {scraping ? 'Scraping...' : 'Scrape Now'}
+                </button>
                 <button
                     onClick={clearLogs}
                     className="px-3 py-1.5 rounded text-xs font-mono text-red-300 bg-[#2a0f13] border border-[#5a1a24] hover:bg-[#35131a] cursor-pointer transition-colors"
