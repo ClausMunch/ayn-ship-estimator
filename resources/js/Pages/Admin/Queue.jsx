@@ -3,7 +3,7 @@ import { useState } from 'react';
 import AdminLayout from '../../Components/Admin/AdminLayout';
 import Toast from '../../Components/Toast';
 
-export default function Queue({ pendingJobs, failedJobs }) {
+export default function Queue({ pendingJobs, failedJobs, queueConnection, failedConnection }) {
     const [toast, setToast] = useState(null);
     const [retryingId, setRetryingId] = useState(null);
 
@@ -36,7 +36,8 @@ export default function Queue({ pendingJobs, failedJobs }) {
             )}
 
             <section className="mb-8">
-                <h3 className="font-sans text-sm font-semibold text-white mb-3">Pending Jobs</h3>
+                <h3 className="font-sans text-sm font-semibold text-white mb-1">Pending Jobs</h3>
+                <p className="text-[10px] text-[#666680] mb-3">DB connection: {queueConnection}</p>
                 <div className="bg-[#15151f] border border-[#2a2a3a] rounded-xl overflow-hidden">
                     <table className="w-full text-xs font-mono">
                         <thead>
@@ -75,7 +76,8 @@ export default function Queue({ pendingJobs, failedJobs }) {
             </section>
 
             <section>
-                <h3 className="font-sans text-sm font-semibold text-white mb-3">Failed Jobs</h3>
+                <h3 className="font-sans text-sm font-semibold text-white mb-1">Failed Jobs</h3>
+                <p className="text-[10px] text-[#666680] mb-3">DB connection: {failedConnection}</p>
                 <div className="bg-[#15151f] border border-[#2a2a3a] rounded-xl overflow-hidden">
                     <table className="w-full text-xs font-mono">
                         <thead>

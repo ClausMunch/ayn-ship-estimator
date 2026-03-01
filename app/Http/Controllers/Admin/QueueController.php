@@ -13,13 +13,18 @@ class QueueController extends Controller
 {
     public function index(): Response
     {
-        $pendingJobs = DB::table('jobs')
+        $queueConnection = config('queue.connections.database.connection') ?: config('database.default');
+        $failedConnection = config('queue.failed.database') ?: config('database.default');
+
+        $pendingJobs = DB::connection($queueConnection)
+            ->table('jobs')
             ->select(['id', 'queue', 'attempts', 'reserved_at', 'available_at', 'created_at'])
             ->orderByDesc('id')
             ->paginate(25, ['*'], 'pending_page')
             ->withQueryString();
 
-        $failedJobs = DB::table('failed_jobs')
+        $failedJobs = DB::connection($failedConnection)
+            ->table('failed_jobs')
             ->select(['id', 'uuid', 'connection', 'queue', 'exception', 'failed_at'])
             ->orderByDesc('id')
             ->paginate(25, ['*'], 'failed_page')
@@ -28,6 +33,8 @@ class QueueController extends Controller
         return Inertia::render('Admin/Queue', [
             'pendingJobs' => $pendingJobs,
             'failedJobs' => $failedJobs,
+            'queueConnection' => $queueConnection,
+            'failedConnection' => $failedConnection,
         ]);
     }
 
