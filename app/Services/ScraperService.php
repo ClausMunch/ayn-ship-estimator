@@ -37,7 +37,7 @@ class ScraperService
             try {
                 $html = $this->makeBrowsershot($chromePath)->bodyHtml();
             } catch (\Throwable $primaryError) {
-                if (! $chromePath) {
+                if (!$chromePath) {
                     throw $primaryError;
                 }
 
@@ -45,7 +45,7 @@ class ScraperService
                 $fallbackNote = sprintf(
                     'Configured browser failed (%s), fallback launch succeeded. Primary error: %s',
                     $chromePath,
-                    $primaryError->getMessage()
+                    $primaryError->getMessage(),
                 );
             }
 
@@ -61,26 +61,22 @@ class ScraperService
                 htmlSnippet: mb_substr($html, 0, 2000),
             );
         } catch (\Throwable $e) {
-            return new ScrapeResult(
-                status: 'failed',
-                error: $e->getMessage(),
-                durationMs: $this->elapsed($startTime),
-            );
+            return new ScrapeResult(status: 'failed', error: $e->getMessage(), durationMs: $this->elapsed($startTime));
         }
     }
 
     private function makeBrowsershot(?string $chromePath = null): Browsershot
     {
-        $browsershot = Browsershot::url(self::URL)
-            ->setNodeModulePath(base_path('node_modules/'))
-            ->waitUntilNetworkIdle();
+        $browsershot = Browsershot::url(self::URL)->setNodeModulePath(base_path(
+            'node_modules/',
+        ))->waitUntilNetworkIdle();
 
         if (config('services.browsershot.no_sandbox')) {
             $browsershot->noSandbox();
         }
 
         $chromiumArgs = config('services.browsershot.chromium_args', []);
-        if (! empty($chromiumArgs)) {
+        if (!empty($chromiumArgs)) {
             $browsershot->addChromiumArguments($chromiumArgs);
         }
 
@@ -153,17 +149,14 @@ class ScraperService
                 continue;
             }
 
-            $batch = ShippingBatch::updateOrCreate(
-                [
-                    'model_variant_id' => $variantId,
-                    'ship_date' => $record['date'],
-                    'order_range_start' => $record['start'],
-                ],
-                [
-                    'order_range_end' => $record['end'],
-                    'scraped_at' => now(),
-                ]
-            );
+            $batch = ShippingBatch::updateOrCreate([
+                'model_variant_id' => $variantId,
+                'ship_date' => $record['date'],
+                'order_range_start' => $record['start'],
+            ], [
+                'order_range_end' => $record['end'],
+                'scraped_at' => now(),
+            ]);
 
             if ($batch->wasRecentlyCreated) {
                 $new++;

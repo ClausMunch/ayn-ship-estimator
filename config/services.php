@@ -1,18 +1,17 @@
 <?php
 
 return [
-
     /*
-    |--------------------------------------------------------------------------
-    | Third Party Services
-    |--------------------------------------------------------------------------
-    |
-    | This file is for storing the credentials for third party services such
-    | as Mailgun, Postmark, AWS and more. This file provides the de facto
-    | location for this type of information, allowing packages to have
-    | a conventional file to locate the various service credentials.
-    |
-    */
+     |--------------------------------------------------------------------------
+     | Third Party Services
+     |--------------------------------------------------------------------------
+     |
+     | This file is for storing the credentials for third party services such
+     | as Mailgun, Postmark, AWS and more. This file provides the de facto
+     | location for this type of information, allowing packages to have
+     | a conventional file to locate the various service credentials.
+     |
+     */
 
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
@@ -38,10 +37,9 @@ return [
     'browsershot' => [
         'chrome_path' => env('BROWSERSHOT_CHROME_PATH') ?: env('PUPPETEER_EXECUTABLE_PATH'),
         'no_sandbox' => env('BROWSERSHOT_NO_SANDBOX', true),
-        'chromium_args' => array_values(array_filter(array_map(
-            'trim',
-            explode(',', (string) env('BROWSERSHOT_CHROMIUM_ARGS', 'disable-dev-shm-usage'))
-        ))),
+        'chromium_args' => array_values(array_filter(array_map('trim', explode(
+            ',',
+            (string) env('BROWSERSHOT_CHROMIUM_ARGS', 'disable-dev-shm-usage'),
+        )))),
     ],
-
 ];

@@ -48,7 +48,7 @@ class Scrape extends Command
             ->skip(1) // skip the one we just created
             ->first();
 
-        if ($lastSuccessful && $result->recordsFound < $lastSuccessful->records_found * 0.5) {
+        if ($lastSuccessful && $result->recordsFound < ($lastSuccessful->records_found * 0.5)) {
             $this->warn("Record count dropped from {$lastSuccessful->records_found} to {$result->recordsFound}.");
             $this->sendAlert(
                 "Record count dropped significantly: {$lastSuccessful->records_found} → {$result->recordsFound}. Data may have been removed.",
@@ -60,7 +60,9 @@ class Scrape extends Command
             $this->warn("Scrape note: {$result->error}");
         }
 
-        $this->info("Scrape complete: {$result->recordsFound} records found, {$result->recordsNew} new. ({$result->durationMs}ms)");
+        $this->info(
+            "Scrape complete: {$result->recordsFound} records found, {$result->recordsNew} new. ({$result->durationMs}ms)",
+        );
 
         return self::SUCCESS;
     }
