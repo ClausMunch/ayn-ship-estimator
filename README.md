@@ -215,7 +215,7 @@ php artisan queue:restart
 Add as a Ploi daemon:
 
 ```bash
-php artisan queue:work --sleep=3 --tries=3 --max-time=3600
+php artisan queue:work --queue=mail,default --sleep=3 --tries=3 --max-time=3600
 ```
 
 ### Environment variables

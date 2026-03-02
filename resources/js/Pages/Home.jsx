@@ -51,14 +51,13 @@ export default function Home({ variants, lastUpdated, csrfToken, signedTs }) {
     }, [result]);
 
     return (
-        <div className="min-h-screen bg-[#0c0c14] text-[#e0e0e8] font-mono flex flex-col items-center justify-center p-6">
+        <main className="min-h-screen bg-[#0c0c14] text-[#e0e0e8] font-mono flex flex-col items-center justify-center p-6">
             {verified && (
                 <Toast message="Email verified! You'll be notified when your estimate changes." />
             )}
 
-            <div className="w-full max-w-[480px] bg-[#15151f] border border-[#2a2a3a] rounded-2xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.03)]">
-                {/* Header */}
-                <div className="px-7 pt-7 pb-5 border-b border-[#2a2a3a] text-center">
+            <article className="w-full max-w-[480px] bg-[#15151f] border border-[#2a2a3a] rounded-2xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.03)]">
+                <header className="px-7 pt-7 pb-5 border-b border-[#2a2a3a] text-center">
                     <h1 className="font-sans text-xl font-semibold text-white tracking-tight mb-1">
                         AYN Thor Ship Date Estimator
                     </h1>
@@ -66,10 +65,9 @@ export default function Home({ variants, lastUpdated, csrfToken, signedTs }) {
                         Based on known shipping batches
                         {lastUpdated && ` · Updated ${new Date(lastUpdated).toLocaleDateString()}`}
                     </p>
-                </div>
+                </header>
 
-                {/* Body */}
-                <div className="px-7 pt-6 pb-7">
+                <section className="px-7 pt-6 pb-7">
                     <ModelSelector
                         variants={variants}
                         selectedId={selectedVariantId}
@@ -91,11 +89,10 @@ export default function Home({ variants, lastUpdated, csrfToken, signedTs }) {
                         signedTs={signedTs}
                         csrfToken={csrfToken}
                     />
-                </div>
-            </div>
+                </section>
+            </article>
 
-            {/* Footer */}
-            <div className="mt-6 text-center text-[10px] text-[#444460] font-light space-y-1">
+            <footer className="mt-6 text-center text-[10px] text-[#444460] font-light space-y-1">
                 <p>
                     Data scraped from{' '}
                     <a
@@ -107,7 +104,7 @@ export default function Home({ variants, lastUpdated, csrfToken, signedTs }) {
                         ayntec.com
                     </a>
                 </p>
-            </div>
-        </div>
+            </footer>
+        </main>
     );
 }

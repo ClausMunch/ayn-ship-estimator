@@ -11,6 +11,14 @@ use App\Http\Controllers\SubscribeController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index']);
+
+Route::get('/sitemap.xml', function () {
+    $url = config('app.url');
+
+    return response()->view('sitemap', ['url' => $url], 200, [
+        'Content-Type' => 'application/xml',
+    ]);
+});
 Route::get('/verify/{token}', [SubscribeController::class, 'verify']);
 Route::get('/unsubscribe/{token}', [SubscribeController::class, 'unsubscribe']);
 
