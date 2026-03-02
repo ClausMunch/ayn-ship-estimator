@@ -33,15 +33,15 @@
     {{-- JSON-LD Structured Data --}}
     <script type="application/ld+json">
     {
-        "@context": "https://schema.org",
-        "@type": "WebApplication",
+        "@@context": "https://schema.org",
+        "@@type": "WebApplication",
         "name": "AYN Thor Ship Date Estimator",
         "url": "{{ config('app.url') }}",
         "description": "Check when your AYN Thor handheld gaming device will ship. Enter your order number and model variant to get an estimated ship date based on real shipping data.",
         "applicationCategory": "UtilityApplication",
         "operatingSystem": "Any",
         "offers": {
-            "@type": "Offer",
+            "@@type": "Offer",
             "price": "0",
             "priceCurrency": "USD"
         }
