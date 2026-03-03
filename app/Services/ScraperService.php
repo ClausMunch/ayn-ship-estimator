@@ -196,7 +196,11 @@ class ScraperService
     private function upsert(array $records): int
     {
         $slugToId = ModelVariant::pluck('id', 'slug');
-        $new = 0;
+        $rowsByKey = [];
+        $variantIds = [];
+        $dates = [];
+        $starts = [];
+        $now = now();
 
         foreach ($records as $record) {
             $variantId = $slugToId[$record['slug']] ?? null;
@@ -204,19 +208,53 @@ class ScraperService
                 continue;
             }
 
-            $batch = ShippingBatch::updateOrCreate([
+            $key = implode('|', [$variantId, $record['date'], $record['start']]);
+
+            $rowsByKey[$key] = [
                 'model_variant_id' => $variantId,
                 'ship_date' => $record['date'],
                 'order_range_start' => $record['start'],
-            ], [
                 'order_range_end' => $record['end'],
-                'scraped_at' => now(),
-            ]);
+                'scraped_at' => $now,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
 
-            if ($batch->wasRecentlyCreated) {
+            $variantIds[] = $variantId;
+            $dates[] = $record['date'];
+            $starts[] = $record['start'];
+        }
+
+        if (empty($rowsByKey)) {
+            return 0;
+        }
+
+        $existing = ShippingBatch::query()
+            ->whereIn('model_variant_id', array_values(array_unique($variantIds)))
+            ->whereIn('ship_date', array_values(array_unique($dates)))
+            ->whereIn('order_range_start', array_values(array_unique($starts)))
+            ->get(['model_variant_id', 'ship_date', 'order_range_start'])
+            ->map(function (ShippingBatch $batch): string {
+                return implode('|', [
+                    $batch->model_variant_id,
+                    $batch->ship_date->toDateString(),
+                    $batch->order_range_start,
+                ]);
+            })
+            ->flip();
+
+        $new = 0;
+        foreach (array_keys($rowsByKey) as $key) {
+            if (!isset($existing[$key])) {
                 $new++;
             }
         }
+
+        ShippingBatch::query()->upsert(
+            array_values($rowsByKey),
+            ['model_variant_id', 'ship_date', 'order_range_start'],
+            ['order_range_end', 'scraped_at', 'updated_at'],
+        );
 
         return $new;
     }
