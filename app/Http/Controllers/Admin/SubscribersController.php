@@ -19,13 +19,15 @@ class SubscribersController extends Controller
         $sort = $request->get('sort', 'created_at');
         $direction = $request->get('direction', 'desc');
 
-        $allowed = ['email', 'order_prefix', 'email_verified_at', 'created_at'];
-        if (!in_array($sort, $allowed)) {
+        if (! in_array($sort, ['email', 'order_prefix', 'email_verified_at', 'created_at'], true)) {
             $sort = 'created_at';
+        }
+        if (! in_array($direction, ['asc', 'desc'], true)) {
+            $direction = 'desc';
         }
 
         $subscribers = Subscriber::with('modelVariant:id,name')
-            ->orderBy($sort, $direction === 'asc' ? 'asc' : 'desc')
+            ->orderBy($sort, $direction)
             ->paginate(25)
             ->withQueryString();
 

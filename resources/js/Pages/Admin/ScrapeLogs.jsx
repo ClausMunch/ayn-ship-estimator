@@ -144,8 +144,9 @@ function Pagination({ links }) {
                         ? 'bg-[#818cf8] text-white'
                         : 'bg-[#1a1a28] text-[#a8a8bc] hover:bg-[#2a2a3a]'
                         } ${!link.url ? 'opacity-30 cursor-not-allowed' : ''}`}
-                    dangerouslySetInnerHTML={{ __html: link.label }}
-                />
+                >
+                    {link.label.replace(/&laquo;/g, '\u00AB').replace(/&raquo;/g, '\u00BB')}
+                </button>
             ))}
         </div>
     );

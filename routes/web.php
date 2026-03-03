@@ -32,16 +32,16 @@ Route::middleware('auth')
     ->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/', [DashboardController::class, 'index']);
-        Route::post('/scrape', [DashboardController::class, 'scrape']);
+        Route::post('/scrape', [DashboardController::class, 'scrape'])->middleware('throttle:3,1');
         Route::get('/subscribers', [SubscribersController::class, 'index']);
         Route::post('/subscribers/{subscriber}/resend-verification', [
             SubscribersController::class,
             'resendVerification',
-        ]);
+        ])->middleware('throttle:5,1');
         Route::delete('/subscribers/{subscriber}', [SubscribersController::class, 'destroy']);
         Route::get('/analytics', [AnalyticsController::class, 'index']);
         Route::get('/scrape-logs', [ScrapeLogsController::class, 'index']);
-        Route::delete('/scrape-logs', [ScrapeLogsController::class, 'clear']);
+        Route::delete('/scrape-logs', [ScrapeLogsController::class, 'clear'])->middleware('throttle:3,1');
         Route::get('/queue', [QueueController::class, 'index']);
-        Route::post('/queue/failed/{id}/retry', [QueueController::class, 'retryFailed']);
+        Route::post('/queue/failed/{id}/retry', [QueueController::class, 'retryFailed'])->middleware('throttle:10,1');
     });
