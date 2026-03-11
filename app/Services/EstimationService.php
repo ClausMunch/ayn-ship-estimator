@@ -56,33 +56,37 @@ class EstimationService
             }
         }
 
-        // Extrapolate beyond known data
+        // Extrapolate beyond known data using weighted average of recent rates
         if (count($timeline) >= 2) {
             $last = $timeline[count($timeline) - 1];
-            $prev = $timeline[count($timeline) - 2];
             $lastTs = $this->toTimestamp($last['date']);
-            $prevTs = $this->toTimestamp($prev['date']);
-            $orderRange = $last['end'] - $prev['end'];
 
-            if ($orderRange <= 0) {
-                // Can't extrapolate from last two, look further back
-                for ($i = count($timeline) - 2; $i >= 1; $i--) {
-                    $r = $timeline[$i]['end'] - $timeline[$i - 1]['end'];
-                    if ($r > 0) {
-                        $t = $this->toTimestamp($timeline[$i]['date']) - $this->toTimestamp($timeline[$i - 1]['date']);
-                        $rate = $t / $r;
-                        $extra = ($orderPrefix - $last['end']) * $rate;
-                        return [
-                            'type' => 'extrapolated',
-                            'formatted' => $this->formatDate($lastTs + $extra),
-                        ];
-                    }
+            // Collect rates (ms per order) from up to 5 most recent consecutive pairs
+            $maxPairs = min(count($timeline) - 1, 5);
+            $rates = [];
+            for ($i = count($timeline) - 1; $i >= count($timeline) - $maxPairs; $i--) {
+                $orderDiff = $timeline[$i]['end'] - $timeline[$i - 1]['end'];
+                if ($orderDiff > 0) {
+                    $timeDiff = $this->toTimestamp($timeline[$i]['date']) - $this->toTimestamp($timeline[$i - 1]['date']);
+                    $rates[] = $timeDiff / $orderDiff;
                 }
+            }
+
+            if (empty($rates)) {
                 return null;
             }
 
-            $rate = ($lastTs - $prevTs) / $orderRange;
-            $extra = ($orderPrefix - $last['end']) * $rate;
+            // Weighted average: most recent rate (index 0) gets highest weight
+            $weightedSum = 0;
+            $weightTotal = 0;
+            for ($i = 0; $i < count($rates); $i++) {
+                $weight = count($rates) - $i;
+                $weightedSum += $rates[$i] * $weight;
+                $weightTotal += $weight;
+            }
+
+            $avgRate = $weightedSum / $weightTotal;
+            $extra = ($orderPrefix - $last['end']) * $avgRate;
 
             return [
                 'type' => 'extrapolated',

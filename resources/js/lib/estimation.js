@@ -117,32 +117,35 @@ export function estimateShipDate(timeline, orderPrefix) {
         }
     }
 
-    // Extrapolate beyond known data
+    // Extrapolate beyond known data using weighted average of recent rates
     if (timeline.length >= 2) {
         const last = timeline[timeline.length - 1];
-        const prev = timeline[timeline.length - 2];
         const lastTs = toTimestamp(last.date);
-        const prevTs = toTimestamp(prev.date);
-        const orderRange = last.end - prev.end;
 
-        if (orderRange <= 0) {
-            // Can't extrapolate from last two, look further back
-            for (let i = timeline.length - 2; i >= 1; i--) {
-                const r = timeline[i].end - timeline[i - 1].end;
-                if (r > 0) {
-                    const t = toTimestamp(timeline[i].date) - toTimestamp(timeline[i - 1].date);
-                    const rate = t / r;
-                    const extra = (orderPrefix - last.end) * rate;
-                    const formatted = formatDate(lastTs + extra);
-                    if (!formatted) return null;
-                    return { type: 'extrapolated', formatted };
-                }
+        // Collect rates (ms per order) from up to 5 most recent consecutive pairs
+        const maxPairs = Math.min(timeline.length - 1, 5);
+        const rates = [];
+        for (let i = timeline.length - 1; i >= timeline.length - maxPairs; i--) {
+            const orderDiff = timeline[i].end - timeline[i - 1].end;
+            if (orderDiff > 0) {
+                const timeDiff = toTimestamp(timeline[i].date) - toTimestamp(timeline[i - 1].date);
+                rates.push(timeDiff / orderDiff);
             }
-            return null;
         }
 
-        const rate = (lastTs - prevTs) / orderRange;
-        const extra = (orderPrefix - last.end) * rate;
+        if (rates.length === 0) return null;
+
+        // Weighted average: most recent rate (index 0) gets highest weight
+        let weightedSum = 0;
+        let weightTotal = 0;
+        for (let i = 0; i < rates.length; i++) {
+            const weight = rates.length - i;
+            weightedSum += rates[i] * weight;
+            weightTotal += weight;
+        }
+
+        const avgRate = weightedSum / weightTotal;
+        const extra = (orderPrefix - last.end) * avgRate;
         const formatted = formatDate(lastTs + extra);
         if (!formatted) return null;
         return { type: 'extrapolated', formatted };
