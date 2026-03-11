@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import ModelSelector from '../Components/ModelSelector';
 import OrderInput from '../Components/OrderInput';
 import ResultDisplay from '../Components/ResultDisplay';
+import HowItWorks from '../Components/HowItWorks';
 import SubscribeForm from '../Components/SubscribeForm';
 import Toast from '../Components/Toast';
 import { buildTimeline, estimateShipDate } from '../lib/estimation';
@@ -82,6 +83,8 @@ export default function Home({ variants, lastUpdated, csrfToken, signedTs }) {
                         modelName={selectedVariant?.name || ''}
                         lastEnd={lastEnd}
                     />
+
+                    <HowItWorks />
 
                     <SubscribeForm
                         variantId={selectedVariantId}
