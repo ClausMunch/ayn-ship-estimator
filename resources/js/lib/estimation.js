@@ -122,25 +122,27 @@ export function estimateShipDate(timeline, orderPrefix) {
         const last = timeline[timeline.length - 1];
         const lastTs = toTimestamp(last.date);
 
-        // Collect rates (ms per order) from up to 5 most recent consecutive pairs
+        // Collect rates (ms per order) and order volumes from up to 5 most recent pairs
         const maxPairs = Math.min(timeline.length - 1, 5);
-        const rates = [];
+        const pairs = [];
         for (let i = timeline.length - 1; i >= timeline.length - maxPairs; i--) {
             const orderDiff = timeline[i].end - timeline[i - 1].end;
             if (orderDiff > 0) {
                 const timeDiff = toTimestamp(timeline[i].date) - toTimestamp(timeline[i - 1].date);
-                rates.push(timeDiff / orderDiff);
+                pairs.push({ rate: timeDiff / orderDiff, volume: orderDiff });
             }
         }
 
-        if (rates.length === 0) return null;
+        if (pairs.length === 0) return null;
 
-        // Weighted average: most recent rate (index 0) gets highest weight
+        // Weighted average: weight by recency (most recent first) × order volume
+        // This prevents small cleanup batches from dominating the projection
         let weightedSum = 0;
         let weightTotal = 0;
-        for (let i = 0; i < rates.length; i++) {
-            const weight = rates.length - i;
-            weightedSum += rates[i] * weight;
+        for (let i = 0; i < pairs.length; i++) {
+            const recency = pairs.length - i;
+            const weight = recency * pairs[i].volume;
+            weightedSum += pairs[i].rate * weight;
             weightTotal += weight;
         }
 

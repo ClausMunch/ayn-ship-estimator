@@ -61,27 +61,29 @@ class EstimationService
             $last = $timeline[count($timeline) - 1];
             $lastTs = $this->toTimestamp($last['date']);
 
-            // Collect rates (ms per order) from up to 5 most recent consecutive pairs
+            // Collect rates (ms per order) and order volumes from up to 5 most recent pairs
             $maxPairs = min(count($timeline) - 1, 5);
-            $rates = [];
+            $pairs = [];
             for ($i = count($timeline) - 1; $i >= count($timeline) - $maxPairs; $i--) {
                 $orderDiff = $timeline[$i]['end'] - $timeline[$i - 1]['end'];
                 if ($orderDiff > 0) {
                     $timeDiff = $this->toTimestamp($timeline[$i]['date']) - $this->toTimestamp($timeline[$i - 1]['date']);
-                    $rates[] = $timeDiff / $orderDiff;
+                    $pairs[] = ['rate' => $timeDiff / $orderDiff, 'volume' => $orderDiff];
                 }
             }
 
-            if (empty($rates)) {
+            if (empty($pairs)) {
                 return null;
             }
 
-            // Weighted average: most recent rate (index 0) gets highest weight
+            // Weighted average: weight by recency (most recent first) × order volume
+            // This prevents small cleanup batches from dominating the projection
             $weightedSum = 0;
             $weightTotal = 0;
-            for ($i = 0; $i < count($rates); $i++) {
-                $weight = count($rates) - $i;
-                $weightedSum += $rates[$i] * $weight;
+            for ($i = 0; $i < count($pairs); $i++) {
+                $recency = count($pairs) - $i;
+                $weight = $recency * $pairs[$i]['volume'];
+                $weightedSum += $pairs[$i]['rate'] * $weight;
                 $weightTotal += $weight;
             }
 
