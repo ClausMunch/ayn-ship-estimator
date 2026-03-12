@@ -55,69 +55,25 @@ class EstimationService
             }
         }
 
-        // Extrapolate beyond known data using the global timeline (all models combined).
-        // Order numbers come from a single pool, so the global rate is more accurate.
-        $globalTimeline = $this->buildGlobalTimeline();
-        $extTimeline = count($globalTimeline) >= 2 ? $globalTimeline : $timeline;
-
-        if (count($extTimeline) >= 2) {
-            $last = $extTimeline[count($extTimeline) - 1];
+        // Extrapolate beyond known data using the model's overall shipping rate.
+        // Using the full history (first to last point) gives a stable, model-specific
+        // rate that isn't skewed by small cleanup batches.
+        if (count($timeline) >= 2) {
+            $first = $timeline[0];
+            $last = $timeline[count($timeline) - 1];
             $lastTs = $this->toTimestamp($last['date']);
+            $firstTs = $this->toTimestamp($first['date']);
 
-            // If order is within the global frontier, interpolate on the global timeline
-            if ($extTimeline === $globalTimeline && $orderPrefix <= $last['end']) {
-                for ($i = 1; $i < count($globalTimeline); $i++) {
-                    if ($orderPrefix <= $globalTimeline[$i]['end']) {
-                        $prevEnd = $globalTimeline[$i - 1]['end'];
-                        $currEnd = $globalTimeline[$i]['end'];
-                        $prevTs = $this->toTimestamp($globalTimeline[$i - 1]['date']);
-                        $currTs = $this->toTimestamp($globalTimeline[$i]['date']);
+            $totalOrders = $last['end'] - $first['end'];
+            $totalTime = $lastTs - $firstTs;
 
-                        if ($currEnd === $prevEnd) {
-                            return [
-                                'type' => 'extrapolated',
-                                'formatted' => $this->formatDate($currTs),
-                            ];
-                        }
-
-                        $ratio = ($orderPrefix - $prevEnd) / ($currEnd - $prevEnd);
-                        $estimatedTs = $prevTs + $ratio * ($currTs - $prevTs);
-
-                        return [
-                            'type' => 'extrapolated',
-                            'formatted' => $this->formatDate($estimatedTs),
-                        ];
-                    }
-                }
-            }
-
-            // Collect rates (ms per order) and order volumes from up to 5 most recent pairs
-            $maxPairs = min(count($extTimeline) - 1, 5);
-            $pairs = [];
-            for ($i = count($extTimeline) - 1; $i >= count($extTimeline) - $maxPairs; $i--) {
-                $orderDiff = $extTimeline[$i]['end'] - $extTimeline[$i - 1]['end'];
-                if ($orderDiff > 0) {
-                    $timeDiff = $this->toTimestamp($extTimeline[$i]['date']) - $this->toTimestamp($extTimeline[$i - 1]['date']);
-                    $pairs[] = ['rate' => $timeDiff / $orderDiff, 'volume' => $orderDiff];
-                }
-            }
-
-            if (empty($pairs)) {
+            if ($totalOrders <= 0 || $totalTime <= 0) {
                 return null;
             }
 
-            // Weighted average: weight by recency (most recent first) × order volume
-            $weightedSum = 0;
-            $weightTotal = 0;
-            for ($i = 0; $i < count($pairs); $i++) {
-                $recency = count($pairs) - $i;
-                $weight = $recency * $pairs[$i]['volume'];
-                $weightedSum += $pairs[$i]['rate'] * $weight;
-                $weightTotal += $weight;
-            }
+            $overallRate = $totalTime / $totalOrders; // ms per order number
 
-            $avgRate = $weightedSum / $weightTotal;
-            $extra = ($orderPrefix - $last['end']) * $avgRate;
+            $extra = ($orderPrefix - $last['end']) * $overallRate;
 
             return [
                 'type' => 'extrapolated',
@@ -126,42 +82,6 @@ class EstimationService
         }
 
         return null;
-    }
-
-    /**
-     * Build a global timeline from ALL models' batches combined.
-     * Uses the max order_range_end across all models per date.
-     *
-     * @return array<int, array{date: string, end: int}>
-     */
-    public function buildGlobalTimeline(): array
-    {
-        $batches = ShippingBatch::all();
-
-        // Group by date, take max end across ALL models per date
-        $map = [];
-        foreach ($batches as $batch) {
-            $date = $batch->ship_date->format('Y-m-d');
-            $end = $batch->order_range_end;
-            if (!isset($map[$date]) || $end > $map[$date]) {
-                $map[$date] = $end;
-            }
-        }
-
-        // Sort by date (chronological), then compute running max of end
-        // so that both date and end are monotonically increasing
-        ksort($map);
-
-        $points = [];
-        $runningMax = 0;
-        foreach ($map as $date => $end) {
-            if ($end > $runningMax) {
-                $runningMax = $end;
-                $points[] = ['date' => $date, 'end' => $runningMax];
-            }
-        }
-
-        return $points;
     }
 
     /**
