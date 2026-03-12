@@ -60,8 +60,9 @@ export default function HowItWorks() {
                             <span className="inline-block w-[7px] h-[7px] rounded-full bg-[#fbbf24] mt-[5px] shrink-0" />
                             <span>
                                 <strong className="text-[#fbbf24] font-medium">Projected</strong> — your order
-                                is beyond the latest known batch. We look at recent shipping rates, giving
-                                more weight to larger batches, and project forward. Less certain, but our best guess.
+                                is beyond the latest known batch for your model. Since order numbers are
+                                shared across all models, we use the overall shipping pace to project
+                                forward. Less certain, but our best guess.
                             </span>
                         </li>
                     </ul>

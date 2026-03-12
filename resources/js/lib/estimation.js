@@ -1,4 +1,39 @@
 /**
+ * Build a global timeline from ALL variants' batches combined.
+ * Groups by date, takes max end across all models, then computes a
+ * running max so both date and end are monotonically increasing.
+ */
+export function buildGlobalTimeline(variants) {
+    const map = new Map();
+    for (const v of variants) {
+        if (!v.shipping_batches) continue;
+        for (const b of v.shipping_batches) {
+            const date = b.ship_date;
+            const end = Number(b.order_range_end);
+            if (!date || Number.isNaN(end)) continue;
+            if (!map.has(date) || end > map.get(date)) {
+                map.set(date, end);
+            }
+        }
+    }
+
+    // Sort by date chronologically, then compute running max of end
+    const sorted = Array.from(map, ([date, end]) => ({ date, end }));
+    sorted.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+
+    const points = [];
+    let runningMax = 0;
+    for (const p of sorted) {
+        if (p.end > runningMax) {
+            runningMax = p.end;
+            points.push({ date: p.date, end: runningMax });
+        }
+    }
+
+    return points;
+}
+
+/**
  * Build the cumulative end-point timeline for a variant from its shipping batches.
  * Returns sorted array of { date: "YYYY-MM-DD", end: number }
  */
@@ -70,11 +105,12 @@ function formatDate(ts) {
 
 /**
  * Estimate ship date for a given order prefix using the timeline data points.
- * @param {Array<{date: string, end: number}>} timeline - sorted by end ascending
+ * @param {Array<{date: string, end: number}>} timeline - per-model timeline, sorted by end ascending
  * @param {number} orderPrefix - 4-digit order prefix
+ * @param {Array<{date: string, end: number}>} [globalTimeline] - all-models timeline for extrapolation
  * @returns {{ type: 'shipped'|'estimated'|'extrapolated', date?: string, formatted: string } | null}
  */
-export function estimateShipDate(timeline, orderPrefix) {
+export function estimateShipDate(timeline, orderPrefix, globalTimeline) {
     if (!timeline || timeline.length === 0) return null;
 
     // Already shipped
@@ -117,18 +153,48 @@ export function estimateShipDate(timeline, orderPrefix) {
         }
     }
 
-    // Extrapolate beyond known data using weighted average of recent rates
-    if (timeline.length >= 2) {
-        const last = timeline[timeline.length - 1];
+    // Extrapolate beyond known data using the global timeline (all models combined).
+    // Order numbers come from a single pool across all models, so the global
+    // shipping rate reflects how fast AYN processes orders overall.
+    const extTimeline = globalTimeline && globalTimeline.length >= 2 ? globalTimeline : timeline;
+
+    if (extTimeline.length >= 2) {
+        const last = extTimeline[extTimeline.length - 1];
         const lastTs = toTimestamp(last.date);
 
+        // If the order is already within the global frontier, use the global
+        // timeline to interpolate — AYN has shipped this order range for other
+        // models, so this model should follow soon.
+        if (globalTimeline && globalTimeline.length >= 2 && orderPrefix <= last.end) {
+            for (let i = 1; i < globalTimeline.length; i++) {
+                if (orderPrefix <= globalTimeline[i].end) {
+                    const prevEnd = globalTimeline[i - 1].end;
+                    const currEnd = globalTimeline[i].end;
+                    const prevTs = toTimestamp(globalTimeline[i - 1].date);
+                    const currTs = toTimestamp(globalTimeline[i].date);
+
+                    if (currEnd === prevEnd) {
+                        const formatted = formatDate(currTs);
+                        if (!formatted) return null;
+                        return { type: 'extrapolated', formatted };
+                    }
+
+                    const ratio = (orderPrefix - prevEnd) / (currEnd - prevEnd);
+                    const estimatedTs = prevTs + ratio * (currTs - prevTs);
+                    const formatted = formatDate(estimatedTs);
+                    if (!formatted) return null;
+                    return { type: 'extrapolated', formatted };
+                }
+            }
+        }
+
         // Collect rates (ms per order) and order volumes from up to 5 most recent pairs
-        const maxPairs = Math.min(timeline.length - 1, 5);
+        const maxPairs = Math.min(extTimeline.length - 1, 5);
         const pairs = [];
-        for (let i = timeline.length - 1; i >= timeline.length - maxPairs; i--) {
-            const orderDiff = timeline[i].end - timeline[i - 1].end;
+        for (let i = extTimeline.length - 1; i >= extTimeline.length - maxPairs; i--) {
+            const orderDiff = extTimeline[i].end - extTimeline[i - 1].end;
             if (orderDiff > 0) {
-                const timeDiff = toTimestamp(timeline[i].date) - toTimestamp(timeline[i - 1].date);
+                const timeDiff = toTimestamp(extTimeline[i].date) - toTimestamp(extTimeline[i - 1].date);
                 pairs.push({ rate: timeDiff / orderDiff, volume: orderDiff });
             }
         }

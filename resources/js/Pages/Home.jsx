@@ -5,7 +5,7 @@ import ResultDisplay from '../Components/ResultDisplay';
 import HowItWorks from '../Components/HowItWorks';
 import SubscribeForm from '../Components/SubscribeForm';
 import Toast from '../Components/Toast';
-import { buildTimeline, estimateShipDate } from '../lib/estimation';
+import { buildTimeline, buildGlobalTimeline, estimateShipDate } from '../lib/estimation';
 
 export default function Home({ variants, lastUpdated, csrfToken, signedTs }) {
     const [selectedVariantId, setSelectedVariantId] = useState(variants[0]?.id);
@@ -20,11 +20,15 @@ export default function Home({ variants, lastUpdated, csrfToken, signedTs }) {
         return buildTimeline(selectedVariant.shipping_batches);
     }, [selectedVariant]);
 
+    const globalTimeline = useMemo(() => {
+        return buildGlobalTimeline(variants);
+    }, [variants]);
+
     const result = useMemo(() => {
         const num = parseInt(orderInput, 10);
         if (isNaN(num) || orderInput.length !== 4) return null;
-        return estimateShipDate(timeline, num);
-    }, [orderInput, timeline]);
+        return estimateShipDate(timeline, num, globalTimeline);
+    }, [orderInput, timeline, globalTimeline]);
 
     const lastEnd = timeline.length > 0 ? timeline[timeline.length - 1].end : null;
 
