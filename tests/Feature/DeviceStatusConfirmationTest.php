@@ -37,9 +37,10 @@ class DeviceStatusConfirmationTest extends TestCase
             'device-status.confirm',
             now()->addDay(),
             ['subscriber' => $subscriber->id, 'milestone' => 'delivered'],
+            absolute: false,
         );
 
-        $this->get($url)->assertOk();
+        $this->get('https://www.example.com'.$url)->assertOk();
 
         $subscriber->refresh();
         $this->assertNotNull($subscriber->shipped_confirmed_at);

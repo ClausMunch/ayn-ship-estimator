@@ -48,6 +48,7 @@ class DeviceStatusConfirmation extends Mailable implements ShouldQueue
             'device-status.confirm',
             now()->addDays(30),
             ['subscriber' => $subscriber->id, 'milestone' => $this->milestone],
+            absolute: false,
         );
 
         return new Content(
