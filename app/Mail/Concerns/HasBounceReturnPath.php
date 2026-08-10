@@ -15,11 +15,8 @@ trait HasBounceReturnPath
             return null;
         }
 
-        [$local, $domain] = explode('@', $address, 2);
-        $returnPath = "{$local}+{$this->subscriber->unsubscribe_token}@{$domain}";
-
-        return static function (Email $message) use ($returnPath): void {
-            $message->returnPath($returnPath);
+        return static function (Email $message) use ($address): void {
+            $message->returnPath($address);
         };
     }
 }

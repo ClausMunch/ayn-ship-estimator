@@ -45,7 +45,7 @@ class CollectMailBounces extends Command
                     ?? 'Delivery was rejected; no diagnostic was supplied.';
                 $hardBounce = $status === null || str_starts_with($status, '5.');
 
-                $subscriber->update([
+                Subscriber::whereRaw('LOWER(email) = ?', [mb_strtolower($subscriber->email)])->update([
                     'delivery_status' => $hardBounce ? 'bounced' : 'deferred',
                     'delivery_error' => mb_substr($diagnostic, 0, 2000),
                     'bounced_at' => $hardBounce ? now() : null,
@@ -99,16 +99,24 @@ class CollectMailBounces extends Command
 
     private function subscriberFromMessage(string $content): ?Subscriber
     {
+        // Continue accepting the original tagged format for messages already in
+        // flight, then fall back to the standard DSN Final-Recipient field.
         $address = (string) config('mail.bounce.address');
         $local = preg_quote(strstr($address, '@', true) ?: '', '/');
         $domain = preg_quote(ltrim((string) strstr($address, '@'), '@'), '/');
 
-        if ($local === '' || $domain === ''
-            || ! preg_match("/{$local}\\+([A-Za-z0-9]{64})@{$domain}/i", $content, $match)) {
+        if ($local !== '' && $domain !== ''
+            && preg_match("/{$local}\\+([A-Za-z0-9]{64})@{$domain}/i", $content, $match)) {
+            return Subscriber::where('unsubscribe_token', $match[1])->first();
+        }
+
+        if (! preg_match('/^Final-Recipient:\s*(?:rfc822;\s*)?([^\s;<>]+@[^\s;<>]+)/mi', $content, $match)) {
             return null;
         }
 
-        return Subscriber::where('unsubscribe_token', $match[1])->first();
+        return Subscriber::whereRaw('LOWER(email) = ?', [mb_strtolower(trim($match[1]))])
+            ->latest('id')
+            ->first();
     }
 
     private function dsnField(string $content, string $field): ?string
