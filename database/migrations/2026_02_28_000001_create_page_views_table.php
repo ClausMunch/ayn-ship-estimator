@@ -16,7 +16,9 @@ return new class extends Migration
             // those rows when creating a strict MariaDB/MySQL schema.
             $table->text('user_agent')->nullable();
             $table->text('referrer')->nullable();
-            $table->timestamp('created_at')->useCurrent();
+            // Preserve legacy SQLite wall-clock values, including local times in
+            // daylight-saving gaps that MySQL TIMESTAMP rejects during conversion.
+            $table->dateTime('created_at')->useCurrent();
 
             $table->index('created_at');
             $table->index('ip_hash');
