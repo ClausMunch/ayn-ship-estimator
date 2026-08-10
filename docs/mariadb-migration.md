@@ -17,6 +17,12 @@ The copy command preserves IDs, null values, timestamps, password hashes, subscr
 - `estimation_logs`
 - `failed_jobs`, when present
 
+For `shipping_batches`, legacy SQLite dates are normalized from either
+`YYYY-MM-DD 00:00:00` or `YYYY-MM-DD` to `YYYY-MM-DD`. If that reveals duplicate
+`(model_variant_id, ship_date, order_range_start)` rows, the row with the highest
+ID is retained and the skipped count is reported. MariaDB stores both legacy
+representations as the same `DATE`, so both rows cannot be copied.
+
 Laravel creates a new `migrations` history on MariaDB. Volatile `cache`, `cache_locks`, `sessions`, `jobs`, `job_batches`, and `password_reset_tokens` data is intentionally not copied. Drain the queue before the final copy; users will need to sign in again after cutover.
 
 ## Assumptions and placeholders
@@ -186,7 +192,8 @@ foreach (['users','model_variants','shipping_batches','subscribers','scrape_logs
 "
 ```
 
-Compare those counts with step 1. Also verify:
+Compare those counts with step 1. `shipping_batches` may be lower only by the
+normalized duplicate count explicitly reported by the copy command. Also verify:
 
 - The newest `shipping_batches.scraped_at` matches the source.
 - Verified and unverified subscriber counts match.

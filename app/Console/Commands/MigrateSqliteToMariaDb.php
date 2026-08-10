@@ -126,6 +126,8 @@ class MigrateSqliteToMariaDb extends Command
         $targetColumns = Schema::connection($target)->getColumnListing($table);
         $columns = array_values(array_intersect($sourceColumns, $targetColumns));
         $sourceCount = DB::connection($source)->table($table)->count();
+        $copyCount = $sourceCount;
+        $skippedCount = 0;
 
         if ($sourceCount === 0) {
             $this->components->twoColumnDetail($table, '0 rows');
@@ -137,31 +139,62 @@ class MigrateSqliteToMariaDb extends Command
             throw new RuntimeException("Table [{$table}] has data but no shared [id] column.");
         }
 
+        $query = DB::connection($source)
+            ->table($table)
+            ->select($columns);
+
+        if ($table === 'shipping_batches') {
+            // Older SQLite rows may store the same logical DATE as either Y-m-d or
+            // Y-m-d 00:00:00. SQLite considers those distinct for the unique index,
+            // while MariaDB normalizes both values to Y-m-d. Keep the newest row for
+            // each normalized key so the copy is deterministic.
+            $newestIds = DB::connection($source)
+                ->table($table)
+                ->selectRaw('MAX(id)')
+                ->groupBy('model_variant_id', 'order_range_start')
+                ->groupByRaw('DATE(ship_date)');
+
+            $query->whereIn('id', $newestIds);
+            $copyCount = (clone $query)->count();
+            $skippedCount = $sourceCount - $copyCount;
+        }
+
         DB::connection($target)->transaction(function () use (
-            $source,
             $target,
             $table,
-            $columns,
+            $query,
             $chunkSize,
         ): void {
-            DB::connection($source)
-                ->table($table)
-                ->select($columns)
+            $query
                 ->orderBy('id')
                 ->chunkById($chunkSize, function ($rows) use ($target, $table): void {
-                    $records = $rows->map(fn ($row): array => (array) $row)->all();
+                    $records = $rows->map(function ($row) use ($table): array {
+                        $record = (array) $row;
+
+                        if ($table === 'shipping_batches') {
+                            $record['ship_date'] = substr((string) $record['ship_date'], 0, 10);
+                        }
+
+                        return $record;
+                    })->all();
                     DB::connection($target)->table($table)->insert($records);
                 });
         });
 
         $targetCount = DB::connection($target)->table($table)->count();
 
-        if ($targetCount !== $sourceCount) {
+        if ($targetCount !== $copyCount) {
             throw new RuntimeException(
-                "Row-count mismatch for [{$table}]: source={$sourceCount}, target={$targetCount}.",
+                "Row-count mismatch for [{$table}]: expected={$copyCount}, target={$targetCount}.",
             );
         }
 
-        $this->components->twoColumnDetail($table, "{$targetCount} rows");
+        $detail = "{$targetCount} rows";
+
+        if ($skippedCount > 0) {
+            $detail .= "; {$skippedCount} normalized duplicate(s) skipped";
+        }
+
+        $this->components->twoColumnDetail($table, $detail);
     }
 }
