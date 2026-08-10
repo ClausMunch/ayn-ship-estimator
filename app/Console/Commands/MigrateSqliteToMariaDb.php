@@ -157,6 +157,19 @@ class MigrateSqliteToMariaDb extends Command
             $query->whereIn('id', $newestIds);
             $copyCount = (clone $query)->count();
             $skippedCount = $sourceCount - $copyCount;
+        } elseif ($table === 'subscribers') {
+            // The MariaDB utf8mb4 collation compares email addresses without case
+            // sensitivity and ignores trailing spaces. SQLite's default unique
+            // comparison does neither, so consolidate legacy variants first.
+            $newestIds = DB::connection($source)
+                ->table($table)
+                ->selectRaw('MAX(id)')
+                ->groupBy('model_variant_id', 'order_prefix')
+                ->groupByRaw('LOWER(TRIM(email))');
+
+            $query->whereIn('id', $newestIds);
+            $copyCount = (clone $query)->count();
+            $skippedCount = $sourceCount - $copyCount;
         }
 
         DB::connection($target)->transaction(function () use (
@@ -173,6 +186,8 @@ class MigrateSqliteToMariaDb extends Command
 
                         if ($table === 'shipping_batches') {
                             $record['ship_date'] = substr((string) $record['ship_date'], 0, 10);
+                        } elseif ($table === 'subscribers') {
+                            $record['email'] = strtolower(trim((string) $record['email']));
                         }
 
                         return $record;
