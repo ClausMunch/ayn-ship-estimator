@@ -44,12 +44,13 @@ class DeviceStatusConfirmation extends Mailable implements ShouldQueue
     public function content(): Content
     {
         $subscriber = $this->subscriber->load('modelVariant');
-        $confirmationUrl = URL::temporarySignedRoute(
+        $signedConfirmationPath = URL::temporarySignedRoute(
             'device-status.confirm',
             now()->addDays(30),
             ['subscriber' => $subscriber->id, 'milestone' => $this->milestone],
             absolute: false,
         );
+        $confirmationUrl = rtrim(config('app.url'), '/').$signedConfirmationPath;
 
         return new Content(
             view: 'mail.device-status-confirmation',

@@ -47,6 +47,17 @@ class DeviceStatusConfirmationTest extends TestCase
         $this->assertNotNull($subscriber->delivered_confirmed_at);
     }
 
+    public function test_confirmation_mail_contains_clickable_absolute_url_with_relative_signature(): void
+    {
+        config(['app.url' => 'https://ayngonnaship.com']);
+        $subscriber = $this->subscriberWithShippingData('2026-08-01');
+
+        $html = (new DeviceStatusConfirmation($subscriber, 'delivered'))->render();
+
+        $this->assertStringContainsString('href="https://ayngonnaship.com/confirm-device-status/', $html);
+        $this->assertStringNotContainsString('href="/confirm-device-status/', $html);
+    }
+
     public function test_unsigned_confirmation_link_is_rejected(): void
     {
         $subscriber = $this->subscriberWithShippingData('2026-08-01');
