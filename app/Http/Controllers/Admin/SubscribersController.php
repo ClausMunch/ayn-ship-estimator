@@ -58,7 +58,9 @@ class SubscribersController extends Controller
             ]);
         }
 
-        Mail::to($subscriber->email)->queue(new VerifySubscription($subscriber));
+        Mail::to($subscriber->email)->queue(
+            (new VerifySubscription($subscriber))->onQueue('mail'),
+        );
 
         return back();
     }
@@ -73,7 +75,7 @@ class SubscribersController extends Controller
             ->chunkById(100, function ($subscribers) use (&$queued): void {
                 foreach ($subscribers as $subscriber) {
                     Mail::to($subscriber->email)
-                        ->queue(new VerifySubscription($subscriber));
+                        ->queue((new VerifySubscription($subscriber))->onQueue('mail'));
                     $queued++;
                 }
             });
