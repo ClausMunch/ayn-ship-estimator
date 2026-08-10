@@ -35,16 +35,21 @@ class ScraperService
         $configuredChromePath = config('services.browsershot.chrome_path');
 
         try {
-            try {
-                $html = $this->makeBrowsershot($configuredChromePath)->bodyHtml();
-            } catch (\Throwable $browserError) {
+            if (config('services.browsershot.enabled')) {
+                try {
+                    $html = $this->makeBrowsershot($configuredChromePath)->bodyHtml();
+                } catch (\Throwable $browserError) {
+                    $usedHttpFallback = true;
+                    $html = $this->fetchHtmlViaHttp();
+
+                    $fallbackNote = sprintf(
+                        'Browsershot failed, HTTP fallback succeeded. %s',
+                        $browserError->getMessage(),
+                    );
+                }
+            } else {
                 $usedHttpFallback = true;
                 $html = $this->fetchHtmlViaHttp();
-
-                $fallbackNote = sprintf(
-                    'Browsershot failed, HTTP fallback succeeded. %s',
-                    $browserError->getMessage(),
-                );
             }
 
             $records = $this->parse($html);
@@ -76,8 +81,9 @@ class ScraperService
         $runtimeUser = getenv('USER') ?: get_current_user();
 
         return sprintf(
-            'user=%s; configured_chrome_path=%s; env_puppeteer_executable_path=%s; http_fallback=%s',
+            'user=%s; browser_enabled=%s; configured_chrome_path=%s; env_puppeteer_executable_path=%s; http_fallback=%s',
             $runtimeUser ?: 'unknown',
+            config('services.browsershot.enabled') ? 'yes' : 'no',
             $configuredChromePath ?: '(unset)',
             getenv('PUPPETEER_EXECUTABLE_PATH') ?: '(unset)',
             $usedHttpFallback ? 'yes' : 'no',

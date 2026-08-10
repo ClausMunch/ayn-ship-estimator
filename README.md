@@ -121,6 +121,7 @@ Then add to your `.env` (ensure it's on its own line):
 ```env
 # IMPORTANT: each key must be on its own line.
 # A missing newline can corrupt launch args, e.g. disable-dev-shm-usageBROWSERSHOT_CHROME_PATH=...
+BROWSERSHOT_ENABLED=true
 BROWSERSHOT_CHROME_PATH=/snap/bin/chromium
 BROWSERSHOT_NO_SANDBOX=true
 BROWSERSHOT_CHROMIUM_ARGS=disable-dev-shm-usage
@@ -130,6 +131,7 @@ Or via command line:
 
 ```bash
 echo "" >> .env  # Ensure file ends with newline
+echo "BROWSERSHOT_ENABLED=true" >> .env
 echo "BROWSERSHOT_CHROME_PATH=/snap/bin/chromium" >> .env
 echo "BROWSERSHOT_NO_SANDBOX=true" >> .env
 echo "BROWSERSHOT_CHROMIUM_ARGS=disable-dev-shm-usage" >> .env

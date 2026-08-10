@@ -35,6 +35,7 @@ return [
     ],
 
     'browsershot' => [
+        'enabled' => filter_var(env('BROWSERSHOT_ENABLED', false), FILTER_VALIDATE_BOOL),
         'chrome_path' => env('BROWSERSHOT_CHROME_PATH') ?: env('PUPPETEER_EXECUTABLE_PATH'),
         'no_sandbox' => env('BROWSERSHOT_NO_SANDBOX', true),
         'chromium_args' => array_values(array_filter(array_map('trim', explode(
