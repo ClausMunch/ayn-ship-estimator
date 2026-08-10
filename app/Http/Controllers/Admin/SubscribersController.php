@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Mail\VerifySubscription;
 use App\Models\Subscriber;
+use App\Services\EstimationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -14,7 +15,7 @@ use Inertia\Response;
 
 class SubscribersController extends Controller
 {
-    public function index(Request $request): Response
+    public function index(Request $request, EstimationService $estimator): Response
     {
         $sort = $request->get('sort', 'created_at');
         $direction = $request->get('direction', 'desc');
@@ -30,6 +31,43 @@ class SubscribersController extends Controller
             ->orderBy($sort, $direction)
             ->paginate(25)
             ->withQueryString();
+
+        $timelines = [];
+        $deliveryDays = max(0, (int) config('shipping.delivery_days', 14));
+        $today = now()->startOfDay();
+
+        $subscribers->through(function (Subscriber $subscriber) use (
+            $estimator,
+            &$timelines,
+            $deliveryDays,
+            $today,
+        ): Subscriber {
+            $variantId = $subscriber->model_variant_id;
+            $timelines[$variantId] ??= $estimator->buildTimeline($variantId);
+            $shipDate = $estimator->estimateDateFromTimeline(
+                $timelines[$variantId],
+                $subscriber->order_prefix,
+            )?->startOfDay();
+
+            $expectation = ['status' => 'unknown', 'ship_date' => null, 'delivery_date' => null];
+
+            if ($shipDate) {
+                $deliveryDate = $shipDate->copy()->addDays($deliveryDays);
+                $status = $today->lt($shipDate)
+                    ? 'not_due'
+                    : ($today->lt($deliveryDate) ? 'should_have_shipped' : 'should_have_delivered');
+
+                $expectation = [
+                    'status' => $status,
+                    'ship_date' => $shipDate->toDateString(),
+                    'delivery_date' => $deliveryDate->toDateString(),
+                ];
+            }
+
+            $subscriber->setAttribute('shipping_expectation', $expectation);
+
+            return $subscriber;
+        });
 
         return Inertia::render('Admin/Subscribers', [
             'subscribers' => $subscribers,

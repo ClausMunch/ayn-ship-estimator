@@ -17,6 +17,10 @@ class Subscriber extends Model
         'delivery_status',
         'delivery_error',
         'bounced_at',
+        'shipped_confirmation_sent_at',
+        'shipped_confirmed_at',
+        'delivered_confirmation_sent_at',
+        'delivered_confirmed_at',
         'verification_token',
         'unsubscribe_token',
     ];
@@ -26,6 +30,10 @@ class Subscriber extends Model
         'email_verified_at' => 'datetime',
         'verification_sent_at' => 'datetime',
         'bounced_at' => 'datetime',
+        'shipped_confirmation_sent_at' => 'datetime',
+        'shipped_confirmed_at' => 'datetime',
+        'delivered_confirmation_sent_at' => 'datetime',
+        'delivered_confirmed_at' => 'datetime',
     ];
 
     public function modelVariant(): BelongsTo

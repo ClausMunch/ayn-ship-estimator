@@ -8,3 +8,4 @@ Schedule::command('notify')->dailyAt('06:30');
 Schedule::command('notify')->dailyAt('18:30');
 Schedule::command('mail:collect-bounces')->everyFiveMinutes()->withoutOverlapping();
 Schedule::command('subscribers:prune-unverified --days=7')->dailyAt('03:15')->withoutOverlapping();
+Schedule::command('subscribers:request-device-confirmations --limit=100')->dailyAt('10:00')->withoutOverlapping();

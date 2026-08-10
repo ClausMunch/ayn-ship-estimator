@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\QueueController;
 use App\Http\Controllers\Admin\ScrapeLogsController;
 use App\Http\Controllers\Admin\SubscribersController;
+use App\Http\Controllers\DeviceStatusConfirmationController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SubscribeController;
 use Illuminate\Support\Facades\Route;
@@ -21,6 +22,10 @@ Route::get('/sitemap.xml', function () {
 });
 Route::get('/verify/{token}', [SubscribeController::class, 'verify']);
 Route::get('/unsubscribe/{token}', [SubscribeController::class, 'unsubscribe']);
+Route::get('/confirm-device-status/{subscriber}/{milestone}', DeviceStatusConfirmationController::class)
+    ->whereIn('milestone', ['shipped', 'delivered'])
+    ->middleware('signed')
+    ->name('device-status.confirm');
 
 // Admin auth (guest only)
 Route::get('/admin/login', [AuthController::class, 'showLogin'])->name('login');

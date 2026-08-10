@@ -26,6 +26,19 @@ class AppServiceProvider extends ServiceProvider
             $header = $event->message->getHeaders()->get('X-AYN-Verification-Subscriber');
 
             if (! $header) {
+                $confirmation = $event->message->getHeaders()->get('X-AYN-Device-Confirmation');
+
+                if (! $confirmation) {
+                    return;
+                }
+
+                [$subscriberId, $milestone] = explode(':', $confirmation->getBodyAsString(), 2);
+                $column = $milestone === 'delivered'
+                    ? 'delivered_confirmation_sent_at'
+                    : 'shipped_confirmation_sent_at';
+
+                Subscriber::whereKey((int) $subscriberId)->update([$column => now()]);
+
                 return;
             }
 

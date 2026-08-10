@@ -14,7 +14,15 @@ class EstimationService
      */
     public function estimate(int $modelVariantId, int $orderPrefix): ?array
     {
-        $timeline = $this->buildTimeline($modelVariantId);
+        return $this->estimateFromTimeline($this->buildTimeline($modelVariantId), $orderPrefix);
+    }
+
+    /**
+     * @param  array<int, array{date: string, end: int}>  $timeline
+     * @return array{type: string, date?: string, formatted: string}|null
+     */
+    public function estimateFromTimeline(array $timeline, int $orderPrefix): ?array
+    {
 
         if (empty($timeline)) {
             return null;
@@ -109,7 +117,7 @@ class EstimationService
         foreach ($batches as $batch) {
             $date = $batch->ship_date->format('Y-m-d');
             $end = $batch->order_range_end;
-            if (!isset($map[$date]) || $end > $map[$date]) {
+            if (! isset($map[$date]) || $end > $map[$date]) {
                 $map[$date] = $end;
             }
         }
@@ -139,7 +147,24 @@ class EstimationService
     {
         $result = $this->estimate($modelVariantId, $orderPrefix);
 
-        if (!$result) {
+        return $this->dateFromResult($result);
+    }
+
+    /**
+     * @param  array<int, array{date: string, end: int}>  $timeline
+     */
+    public function estimateDateFromTimeline(array $timeline, int $orderPrefix): ?Carbon
+    {
+        return $this->dateFromResult($this->estimateFromTimeline($timeline, $orderPrefix));
+    }
+
+    /**
+     * @param  array{type: string, date?: string, formatted: string}|null  $result
+     */
+    private function dateFromResult(?array $result): ?Carbon
+    {
+
+        if (! $result) {
             return null;
         }
 
@@ -153,7 +178,7 @@ class EstimationService
      */
     private function toTimestamp(string $date): float
     {
-        return Carbon::parse($date . 'T00:00:00Z')->getTimestampMs();
+        return Carbon::parse($date.'T00:00:00Z')->getTimestampMs();
     }
 
     /**
@@ -190,6 +215,7 @@ class EstimationService
     {
         // Remove day name prefix
         $dateStr = preg_replace('/^\w+,\s*/', '', $formatted);
+
         return Carbon::parse($dateStr)->format('Y-m-d');
     }
 }

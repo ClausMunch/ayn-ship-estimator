@@ -14,6 +14,42 @@ const COLUMNS = [
     },
     { key: 'order_prefix', label: 'Order Prefix' },
     {
+        key: 'shipping_expectation',
+        label: 'Shipping status',
+        sortable: false,
+        render: (row) => {
+            const expectation = row.shipping_expectation;
+            const styles = {
+                not_due: ['Not due', 'text-[#818cf8]'],
+                should_have_shipped: ['Should have shipped', 'text-amber-300'],
+                should_have_delivered: ['Should have delivered', 'text-emerald-300'],
+                unknown: ['Unknown', 'text-[#666680]'],
+            };
+            const [label, className] = styles[expectation?.status] || styles.unknown;
+            const title = expectation?.ship_date
+                ? `Calculated ship date: ${expectation.ship_date}; expected delivery: ${expectation.delivery_date}`
+                : 'Not enough shipping data to calculate an estimate.';
+
+            return <span className={className} title={title}>{label}</span>;
+        },
+    },
+    {
+        key: 'device_confirmation',
+        label: 'User confirmed',
+        sortable: false,
+        render: (row) => {
+            if (row.delivered_confirmed_at) {
+                return <span className="text-emerald-300" title={new Date(row.delivered_confirmed_at).toLocaleString()}>Delivered</span>;
+            }
+            if (row.shipped_confirmed_at) {
+                return <span className="text-cyan-300" title={new Date(row.shipped_confirmed_at).toLocaleString()}>Shipped</span>;
+            }
+            if (row.delivered_confirmation_sent_at) return <span className="text-[#666680]">Asked about delivery</span>;
+            if (row.shipped_confirmation_sent_at) return <span className="text-[#666680]">Asked about shipment</span>;
+            return <span className="text-[#444460]">Not asked</span>;
+        },
+    },
+    {
         key: 'email_verified_at',
         label: 'Verified',
         render: (row) => row.email_verified_at
