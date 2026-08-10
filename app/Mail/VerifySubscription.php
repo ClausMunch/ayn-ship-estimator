@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Mail\Concerns\HasBounceReturnPath;
+use App\Mail\Concerns\HasReliableDelivery;
 use App\Models\Subscriber;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -13,7 +14,7 @@ use Illuminate\Queue\SerializesModels;
 
 class VerifySubscription extends Mailable implements ShouldQueue
 {
-    use HasBounceReturnPath, Queueable, SerializesModels;
+    use HasBounceReturnPath, HasReliableDelivery, Queueable, SerializesModels;
 
     public function __construct(
         public readonly Subscriber $subscriber,

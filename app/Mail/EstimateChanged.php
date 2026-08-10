@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Mail\Concerns\HasBounceReturnPath;
+use App\Mail\Concerns\HasReliableDelivery;
 use App\Models\Subscriber;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -12,7 +13,7 @@ use Illuminate\Queue\SerializesModels;
 
 class EstimateChanged extends Mailable
 {
-    use HasBounceReturnPath, Queueable, SerializesModels;
+    use HasBounceReturnPath, HasReliableDelivery, Queueable, SerializesModels;
 
     public function __construct(
         public readonly Subscriber $subscriber,

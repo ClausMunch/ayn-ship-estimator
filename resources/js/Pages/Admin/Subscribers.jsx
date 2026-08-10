@@ -25,7 +25,7 @@ const COLUMNS = [
         label: 'Delivery',
         sortable: false,
         render: (row) => (
-            <span title={row.delivery_error || ''} className={row.delivery_status === 'bounced' ? 'text-red-400' : row.delivery_status === 'deferred' ? 'text-amber-300' : 'text-emerald-300'}>
+            <span title={row.delivery_error || ''} className={['bounced', 'failed'].includes(row.delivery_status) ? 'text-red-400' : row.delivery_status === 'deferred' ? 'text-amber-300' : 'text-emerald-300'}>
                 {row.delivery_status || 'active'}
             </span>
         ),
