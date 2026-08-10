@@ -1,0 +1,7 @@
+@extends('errors.layout')
+@section('code', '503')
+@section('image', '/images/ayn-thor_503-optimized.webp')
+@section('image_alt', 'AYN Thor displaying a down for maintenance message')
+@section('title', 'Down for Maintenance')
+@section('message', 'We are making a few improvements. Please check back shortly.')
+@section('hide_home_link', true)

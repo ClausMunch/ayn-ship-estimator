@@ -4,6 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    @include('partials.favicon')
 
     <title>AYN Thor Ship Date Estimator — Check When Your Order Ships</title>
     <meta name="description"

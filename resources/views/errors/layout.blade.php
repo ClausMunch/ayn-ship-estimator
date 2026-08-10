@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    @include('partials.favicon')
     <title>@yield('title') — AYN Thor Ship Date Estimator</title>
     <style>
         body {
@@ -14,6 +15,8 @@
             justify-content: center;
             min-height: 100vh;
             margin: 0;
+            padding: 24px;
+            box-sizing: border-box;
         }
         .card {
             background: #15151f;
@@ -22,6 +25,14 @@
             padding: 48px;
             text-align: center;
             max-width: 400px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .error-image {
+            display: block;
+            width: min(100%, 320px);
+            height: auto;
+            margin: -24px auto -12px;
         }
         .code {
             font-size: 48px;
@@ -37,10 +48,21 @@
 </head>
 <body>
     <div class="card">
+        @hasSection('image')
+            <img
+                class="error-image"
+                src="@yield('image')"
+                alt="@yield('image_alt')"
+                width="640"
+                height="640"
+            >
+        @endif
         <div class="code">@yield('code')</div>
         <h1>@yield('title')</h1>
         <p>@yield('message')</p>
-        <a href="/">Back to estimator</a>
+        @unless(View::hasSection('hide_home_link'))
+            <a href="/">Back to estimator</a>
+        @endunless
     </div>
 </body>
 </html>

@@ -59,6 +59,14 @@ export default function Home({ variants, lastUpdated, csrfToken, signedTs }) {
 
             <article className="w-full max-w-[480px] bg-[#15151f] border border-[#2a2a3a] rounded-2xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.03)]">
                 <header className="px-7 pt-7 pb-5 border-b border-[#2a2a3a] text-center">
+                    <img
+                        src="/images/ayn-thor-optimized.webp"
+                        alt="AYN Thor handheld console"
+                        width="640"
+                        height="640"
+                        fetchPriority="high"
+                        className="w-36 h-36 mx-auto -mt-3 -mb-1 object-contain"
+                    />
                     <h1 className="font-sans text-xl font-semibold text-white tracking-tight mb-1">
                         AYN Thor Ship Date Estimator
                     </h1>

@@ -1,4 +1,6 @@
 @extends('errors.layout')
 @section('code', '500')
+@section('image', '/images/ayn-thor_500-optimized.webp')
+@section('image_alt', 'AYN Thor displaying a server error message')
 @section('title', 'Server Error')
 @section('message', 'Something went wrong on our end. Please try again later.')

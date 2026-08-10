@@ -1,4 +1,6 @@
 @extends('errors.layout')
 @section('code', '404')
+@section('image', '/images/ayn-thor_404-optimized.webp')
+@section('image_alt', 'AYN Thor displaying a page not found message')
 @section('title', 'Page Not Found')
 @section('message', 'The page you are looking for does not exist.')
