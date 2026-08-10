@@ -15,6 +15,12 @@ class CollectMailBounces extends Command
 
     public function handle(): int
     {
+        if (! config('mail.bounce.enabled')) {
+            $this->components->info('Bounce collection is disabled.');
+
+            return self::SUCCESS;
+        }
+
         if (! function_exists('imap_open')) {
             $this->error('The PHP IMAP extension is not installed.');
 
@@ -82,7 +88,10 @@ class CollectMailBounces extends Command
         $inbox = @imap_open($path, $config['username'], $config['password']);
 
         if ($inbox === false) {
-            throw new RuntimeException('Could not open bounce mailbox: '.(imap_last_error() ?: 'unknown IMAP error'));
+            $message = imap_last_error() ?: 'unknown IMAP error';
+            imap_errors();
+
+            throw new RuntimeException('Could not open bounce mailbox: '.$message);
         }
 
         return $inbox;

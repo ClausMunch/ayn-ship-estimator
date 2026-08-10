@@ -118,6 +118,7 @@ return [
     'admin_email' => env('ADMIN_EMAIL'),
 
     'bounce' => [
+        'enabled' => filter_var(env('MAIL_BOUNCE_ENABLED', false), FILTER_VALIDATE_BOOL),
         'address' => env('MAIL_BOUNCE_ADDRESS'),
         'host' => env('MAIL_BOUNCE_HOST'),
         'port' => (int) env('MAIL_BOUNCE_PORT', 993),
