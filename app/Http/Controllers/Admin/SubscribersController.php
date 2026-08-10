@@ -33,7 +33,9 @@ class SubscribersController extends Controller
 
         return Inertia::render('Admin/Subscribers', [
             'subscribers' => $subscribers,
-            'unverifiedCount' => Subscriber::whereNull('email_verified_at')->count(),
+            'unverifiedCount' => Subscriber::whereNull('email_verified_at')
+                ->where('delivery_status', '!=', 'bounced')->count(),
+            'bouncedCount' => Subscriber::where('delivery_status', 'bounced')->count(),
             'sort' => $sort,
             'direction' => $direction,
         ]);
@@ -48,9 +50,11 @@ class SubscribersController extends Controller
 
     public function resendVerification(Subscriber $subscriber): RedirectResponse
     {
-        if ($subscriber->isVerified()) {
+        if ($subscriber->isVerified() || $subscriber->delivery_status === 'bounced') {
             throw ValidationException::withMessages([
-                'resend' => 'Subscriber is already verified.',
+                'resend' => $subscriber->isVerified()
+                    ? 'Subscriber is already verified.'
+                    : 'Subscriber is suppressed after a permanent delivery failure.',
             ]);
         }
 
@@ -64,6 +68,7 @@ class SubscribersController extends Controller
         $queued = 0;
 
         Subscriber::whereNull('email_verified_at')
+            ->where('delivery_status', '!=', 'bounced')
             ->orderBy('id')
             ->chunkById(100, function ($subscribers) use (&$queued): void {
                 foreach ($subscribers as $subscriber) {
@@ -74,5 +79,12 @@ class SubscribersController extends Controller
             });
 
         return back()->with('success', "Queued {$queued} verification emails.");
+    }
+
+    public function destroyBounced(): RedirectResponse
+    {
+        $deleted = Subscriber::where('delivery_status', 'bounced')->delete();
+
+        return back()->with('success', "Deleted {$deleted} rejected subscribers.");
     }
 }

@@ -21,13 +21,23 @@ const COLUMNS = [
             : 'No',
     },
     {
+        key: 'delivery_status',
+        label: 'Delivery',
+        sortable: false,
+        render: (row) => (
+            <span title={row.delivery_error || ''} className={row.delivery_status === 'bounced' ? 'text-red-400' : row.delivery_status === 'deferred' ? 'text-amber-300' : 'text-emerald-300'}>
+                {row.delivery_status || 'active'}
+            </span>
+        ),
+    },
+    {
         key: 'created_at',
         label: 'Date',
         render: (row) => new Date(row.created_at).toLocaleDateString(),
     },
 ];
 
-export default function Subscribers({ subscribers, unverifiedCount, sort, direction }) {
+export default function Subscribers({ subscribers, unverifiedCount, bouncedCount, sort, direction }) {
     const [toast, setToast] = useState(null);
     const [resendingAll, setResendingAll] = useState(false);
 
@@ -74,6 +84,14 @@ export default function Subscribers({ subscribers, unverifiedCount, sort, direct
         });
     };
 
+    const handleDeleteBounced = () => {
+        if (!confirm(`Permanently delete all ${bouncedCount} rejected subscribers?`)) return;
+        router.delete('/admin/subscribers/bounced', {
+            preserveScroll: true,
+            onSuccess: () => setToast({ message: `${bouncedCount} rejected subscribers deleted.`, type: 'success' }),
+        });
+    };
+
     return (
         <AdminLayout title="Subscribers">
             {toast && (
@@ -84,7 +102,15 @@ export default function Subscribers({ subscribers, unverifiedCount, sort, direct
                 />
             )}
 
-            <div className="flex justify-end mb-4">
+            <div className="flex justify-end gap-3 mb-4">
+                <button
+                    type="button"
+                    disabled={bouncedCount === 0}
+                    onClick={handleDeleteBounced}
+                    className="px-3 py-2 rounded bg-red-950 text-red-300 text-xs font-mono hover:bg-red-900 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                >
+                    Delete rejected ({bouncedCount})
+                </button>
                 <button
                     type="button"
                     disabled={unverifiedCount === 0 || resendingAll}
@@ -105,7 +131,7 @@ export default function Subscribers({ subscribers, unverifiedCount, sort, direct
                 onSort={handleSort}
                 actions={(row) => (
                     <div className="flex items-center justify-end gap-3">
-                        {!row.email_verified_at && (
+                        {!row.email_verified_at && row.delivery_status !== 'bounced' && (
                             <button
                                 onClick={() => handleResendVerification(row)}
                                 className="text-indigo-300 hover:text-indigo-200 text-[10px] cursor-pointer"

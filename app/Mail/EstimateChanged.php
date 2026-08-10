@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Mail\Concerns\HasBounceReturnPath;
 use App\Models\Subscriber;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -11,7 +12,7 @@ use Illuminate\Queue\SerializesModels;
 
 class EstimateChanged extends Mailable
 {
-    use Queueable, SerializesModels;
+    use HasBounceReturnPath, Queueable, SerializesModels;
 
     public function __construct(
         public readonly Subscriber $subscriber,
@@ -25,6 +26,7 @@ class EstimateChanged extends Mailable
 
         return new Envelope(
             subject: "Your AYN Thor {$modelName} estimate changed",
+            using: array_filter([$this->bounceEnvelopeCallback()]),
         );
     }
 

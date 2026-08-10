@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Mail\Concerns\HasBounceReturnPath;
 use App\Models\Subscriber;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -12,7 +13,7 @@ use Illuminate\Queue\SerializesModels;
 
 class VerifySubscription extends Mailable implements ShouldQueue
 {
-    use Queueable, SerializesModels;
+    use HasBounceReturnPath, Queueable, SerializesModels;
 
     public function __construct(
         public readonly Subscriber $subscriber,
@@ -20,7 +21,10 @@ class VerifySubscription extends Mailable implements ShouldQueue
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: 'Verify your shipping estimate subscription');
+        return new Envelope(
+            subject: 'Verify your shipping estimate subscription',
+            using: array_filter([$this->bounceEnvelopeCallback()]),
+        );
     }
 
     public function content(): Content

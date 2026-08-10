@@ -117,4 +117,14 @@ return [
 
     'admin_email' => env('ADMIN_EMAIL'),
 
+    'bounce' => [
+        'address' => env('MAIL_BOUNCE_ADDRESS'),
+        'host' => env('MAIL_BOUNCE_HOST'),
+        'port' => (int) env('MAIL_BOUNCE_PORT', 993),
+        'encryption' => env('MAIL_BOUNCE_ENCRYPTION', 'ssl'),
+        'username' => env('MAIL_BOUNCE_USERNAME'),
+        'password' => env('MAIL_BOUNCE_PASSWORD'),
+        'mailbox' => env('MAIL_BOUNCE_MAILBOX', 'INBOX'),
+    ],
+
 ];

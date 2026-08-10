@@ -38,6 +38,7 @@ Route::middleware('auth')
             SubscribersController::class,
             'resendAllVerifications',
         ])->middleware('throttle:1,1');
+        Route::delete('/subscribers/bounced', [SubscribersController::class, 'destroyBounced']);
         Route::post('/subscribers/{subscriber}/resend-verification', [
             SubscribersController::class,
             'resendVerification',

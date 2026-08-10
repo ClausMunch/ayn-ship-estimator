@@ -13,6 +13,9 @@ class Subscriber extends Model
         'order_prefix',
         'last_estimated_date',
         'email_verified_at',
+        'delivery_status',
+        'delivery_error',
+        'bounced_at',
         'verification_token',
         'unsubscribe_token',
     ];
@@ -20,6 +23,7 @@ class Subscriber extends Model
     protected $casts = [
         'last_estimated_date' => 'date',
         'email_verified_at' => 'datetime',
+        'bounced_at' => 'datetime',
     ];
 
     public function modelVariant(): BelongsTo

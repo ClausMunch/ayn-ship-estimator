@@ -11,11 +11,13 @@ use Illuminate\Support\Facades\Mail;
 class Notify extends Command
 {
     protected $signature = 'notify';
+
     protected $description = 'Check for estimate changes and notify verified subscribers';
 
     public function handle(EstimationService $estimator): int
     {
         $subscribers = Subscriber::whereNotNull('email_verified_at')
+            ->where('delivery_status', '!=', 'bounced')
             ->with('modelVariant')
             ->get();
 
@@ -26,21 +28,22 @@ class Notify extends Command
         foreach ($subscribers as $subscriber) {
             $result = $estimator->estimate($subscriber->model_variant_id, $subscriber->order_prefix);
 
-            if (!$result) {
+            if (! $result) {
                 continue;
             }
 
             $newDate = $estimator->estimateDate($subscriber->model_variant_id, $subscriber->order_prefix);
 
-            if (!$newDate) {
+            if (! $newDate) {
                 continue;
             }
 
             $lastDate = $subscriber->last_estimated_date;
 
             // If no previous estimate, just set it without notifying
-            if (!$lastDate) {
+            if (! $lastDate) {
                 $subscriber->update(['last_estimated_date' => $newDate->toDateString()]);
+
                 continue;
             }
 
