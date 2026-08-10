@@ -11,8 +11,11 @@ return new class extends Migration
         Schema::create('page_views', function (Blueprint $table) {
             $table->id();
             $table->string('ip_hash', 64);
-            $table->string('user_agent', 512)->nullable();
-            $table->string('referrer', 1024)->nullable();
+            // SQLite does not enforce VARCHAR lengths, so legacy analytics rows
+            // can exceed the application's current input caps. TEXT preserves
+            // those rows when creating a strict MariaDB/MySQL schema.
+            $table->text('user_agent')->nullable();
+            $table->text('referrer')->nullable();
             $table->timestamp('created_at')->useCurrent();
 
             $table->index('created_at');

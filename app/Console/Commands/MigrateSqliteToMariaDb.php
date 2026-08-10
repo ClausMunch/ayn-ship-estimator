@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use RuntimeException;
@@ -192,7 +193,19 @@ class MigrateSqliteToMariaDb extends Command
 
                         return $record;
                     })->all();
-                    DB::connection($target)->table($table)->insert($records);
+
+                    try {
+                        DB::connection($target)->table($table)->insert($records);
+                    } catch (QueryException $error) {
+                        $firstId = $records[0]['id'] ?? '?';
+                        $lastId = $records[array_key_last($records)]['id'] ?? '?';
+                        $databaseMessage = $error->errorInfo[2] ?? 'Database rejected the insert.';
+
+                        throw new RuntimeException(
+                            "Failed copying [{$table}] IDs {$firstId}-{$lastId}: {$databaseMessage}",
+                            previous: $error,
+                        );
+                    }
                 });
         });
 
