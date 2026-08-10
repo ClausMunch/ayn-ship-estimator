@@ -13,7 +13,9 @@ return new class extends Migration
             $table->foreignId('model_variant_id')->constrained()->cascadeOnDelete();
             $table->unsignedInteger('order_prefix');
             $table->string('result_type', 20);
-            $table->timestamp('created_at')->useCurrent();
+            // Preserve legacy SQLite wall-clock values, including local times in
+            // daylight-saving gaps that MySQL TIMESTAMP rejects during conversion.
+            $table->dateTime('created_at')->useCurrent();
 
             $table->index('created_at');
             $table->index('model_variant_id');
