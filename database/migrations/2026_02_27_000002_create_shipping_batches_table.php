@@ -17,7 +17,10 @@ return new class extends Migration
             $table->timestamp('scraped_at')->nullable();
             $table->timestamps();
 
-            $table->unique(['model_variant_id', 'ship_date', 'order_range_start']);
+            $table->unique(
+                ['model_variant_id', 'ship_date', 'order_range_start'],
+                'shipping_batches_variant_ship_range_unique'
+            );
         });
     }
 
