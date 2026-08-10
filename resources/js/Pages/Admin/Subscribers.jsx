@@ -27,8 +27,9 @@ const COLUMNS = [
     },
 ];
 
-export default function Subscribers({ subscribers, sort, direction }) {
+export default function Subscribers({ subscribers, unverifiedCount, sort, direction }) {
     const [toast, setToast] = useState(null);
+    const [resendingAll, setResendingAll] = useState(false);
 
     const handleSort = (key) => {
         router.get('/admin/subscribers', {
@@ -55,6 +56,24 @@ export default function Subscribers({ subscribers, sort, direction }) {
         });
     };
 
+    const handleResendAllVerifications = () => {
+        if (unverifiedCount === 0) return;
+        if (!confirm(`Queue verification emails for all ${unverifiedCount} unverified subscribers?`)) return;
+
+        setResendingAll(true);
+        router.post('/admin/subscribers/resend-all-verifications', {}, {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                setToast({ message: `${unverifiedCount} verification emails queued.`, type: 'success' });
+            },
+            onError: () => {
+                setToast({ message: 'Failed to queue verification emails.', type: 'error' });
+            },
+            onFinish: () => setResendingAll(false),
+        });
+    };
+
     return (
         <AdminLayout title="Subscribers">
             {toast && (
@@ -64,6 +83,19 @@ export default function Subscribers({ subscribers, sort, direction }) {
                     duration={3500}
                 />
             )}
+
+            <div className="flex justify-end mb-4">
+                <button
+                    type="button"
+                    disabled={unverifiedCount === 0 || resendingAll}
+                    onClick={handleResendAllVerifications}
+                    className="px-3 py-2 rounded bg-[#4f46e5] text-white text-xs font-mono hover:bg-[#6366f1] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                >
+                    {resendingAll
+                        ? 'Queueing…'
+                        : `Resend all unverified (${unverifiedCount})`}
+                </button>
+            </div>
 
             <DataTable
                 columns={COLUMNS}

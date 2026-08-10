@@ -33,6 +33,7 @@ class SubscribersController extends Controller
 
         return Inertia::render('Admin/Subscribers', [
             'subscribers' => $subscribers,
+            'unverifiedCount' => Subscriber::whereNull('email_verified_at')->count(),
             'sort' => $sort,
             'direction' => $direction,
         ]);
@@ -56,5 +57,22 @@ class SubscribersController extends Controller
         Mail::to($subscriber->email)->queue(new VerifySubscription($subscriber));
 
         return back();
+    }
+
+    public function resendAllVerifications(): RedirectResponse
+    {
+        $queued = 0;
+
+        Subscriber::whereNull('email_verified_at')
+            ->orderBy('id')
+            ->chunkById(100, function ($subscribers) use (&$queued): void {
+                foreach ($subscribers as $subscriber) {
+                    Mail::to($subscriber->email)
+                        ->queue(new VerifySubscription($subscriber));
+                    $queued++;
+                }
+            });
+
+        return back()->with('success', "Queued {$queued} verification emails.");
     }
 }

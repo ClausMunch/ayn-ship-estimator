@@ -34,6 +34,10 @@ Route::middleware('auth')
         Route::get('/', [DashboardController::class, 'index']);
         Route::post('/scrape', [DashboardController::class, 'scrape'])->middleware('throttle:3,1');
         Route::get('/subscribers', [SubscribersController::class, 'index']);
+        Route::post('/subscribers/resend-all-verifications', [
+            SubscribersController::class,
+            'resendAllVerifications',
+        ])->middleware('throttle:1,1');
         Route::post('/subscribers/{subscriber}/resend-verification', [
             SubscribersController::class,
             'resendVerification',
