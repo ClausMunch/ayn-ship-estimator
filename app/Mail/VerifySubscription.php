@@ -11,6 +11,7 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Symfony\Component\Mime\Email;
 
 class VerifySubscription extends Mailable implements ShouldQueue
 {
@@ -24,7 +25,15 @@ class VerifySubscription extends Mailable implements ShouldQueue
     {
         return new Envelope(
             subject: 'Verify your shipping estimate subscription',
-            using: array_filter([$this->bounceEnvelopeCallback()]),
+            using: array_filter([
+                $this->bounceEnvelopeCallback(),
+                function (Email $message): void {
+                    $message->getHeaders()->addTextHeader(
+                        'X-AYN-Verification-Subscriber',
+                        (string) $this->subscriber->id,
+                    );
+                },
+            ]),
         );
     }
 

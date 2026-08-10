@@ -19,7 +19,7 @@ class SubscribersController extends Controller
         $sort = $request->get('sort', 'created_at');
         $direction = $request->get('direction', 'desc');
 
-        if (! in_array($sort, ['email', 'order_prefix', 'email_verified_at', 'created_at'], true)) {
+        if (! in_array($sort, ['email', 'order_prefix', 'email_verified_at', 'verification_sent_at', 'created_at'], true)) {
             $sort = 'created_at';
         }
         if (! in_array($direction, ['asc', 'desc'], true)) {

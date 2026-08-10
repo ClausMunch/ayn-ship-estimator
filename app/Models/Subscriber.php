@@ -13,6 +13,7 @@ class Subscriber extends Model
         'order_prefix',
         'last_estimated_date',
         'email_verified_at',
+        'verification_sent_at',
         'delivery_status',
         'delivery_error',
         'bounced_at',
@@ -23,6 +24,7 @@ class Subscriber extends Model
     protected $casts = [
         'last_estimated_date' => 'date',
         'email_verified_at' => 'datetime',
+        'verification_sent_at' => 'datetime',
         'bounced_at' => 'datetime',
     ];
 

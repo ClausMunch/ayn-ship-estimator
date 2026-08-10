@@ -21,12 +21,19 @@ const COLUMNS = [
             : 'No',
     },
     {
+        key: 'verification_sent_at',
+        label: 'Verification sent',
+        render: (row) => row.verification_sent_at
+            ? new Date(row.verification_sent_at).toLocaleString()
+            : 'Not sent',
+    },
+    {
         key: 'delivery_status',
         label: 'Delivery',
         sortable: false,
         render: (row) => (
             <span title={row.delivery_error || ''} className={['bounced', 'failed'].includes(row.delivery_status) ? 'text-red-400' : row.delivery_status === 'deferred' ? 'text-amber-300' : 'text-emerald-300'}>
-                {row.delivery_status || 'active'}
+                {row.delivery_status === 'bounced' ? 'Rejected' : (row.delivery_status || 'active')}
             </span>
         ),
     },
