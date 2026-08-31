@@ -4,11 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Models\Subscriber;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\Request;
 
 class DeviceStatusConfirmationController extends Controller
 {
-    public function __invoke(Subscriber $subscriber, string $milestone): View
+    public function __invoke(Request $request, Subscriber $subscriber, string $milestone): View
     {
+        abort_unless(
+            $request->hasValidSignature(absolute: false) || $request->hasValidSignature(),
+            403,
+            'Invalid signature.',
+        );
+
         $now = now();
 
         if ($milestone === 'delivered') {

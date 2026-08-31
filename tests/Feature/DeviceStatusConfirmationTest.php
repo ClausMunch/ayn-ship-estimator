@@ -56,6 +56,22 @@ class DeviceStatusConfirmationTest extends TestCase
 
         $this->assertStringContainsString('href="https://ayngonnaship.com/confirm-device-status/', $html);
         $this->assertStringNotContainsString('href="/confirm-device-status/', $html);
+
+        preg_match('/href="([^"]+)"/', $html, $matches);
+        $this->get(html_entity_decode($matches[1]))->assertOk();
+    }
+
+    public function test_absolute_signed_delivery_link_is_still_accepted(): void
+    {
+        config(['app.url' => 'https://ayngonnaship.com']);
+        $subscriber = $this->subscriberWithShippingData('2026-08-01');
+        $url = URL::temporarySignedRoute(
+            'device-status.confirm',
+            now()->addDay(),
+            ['subscriber' => $subscriber->id, 'milestone' => 'delivered'],
+        );
+
+        $this->get($url)->assertOk();
     }
 
     public function test_unsigned_confirmation_link_is_rejected(): void

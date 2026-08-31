@@ -24,7 +24,6 @@ Route::get('/verify/{token}', [SubscribeController::class, 'verify']);
 Route::get('/unsubscribe/{token}', [SubscribeController::class, 'unsubscribe']);
 Route::get('/confirm-device-status/{subscriber}/{milestone}', DeviceStatusConfirmationController::class)
     ->whereIn('milestone', ['shipped', 'delivered'])
-    ->middleware('signed:relative')
     ->name('device-status.confirm');
 
 // Admin auth (guest only)
