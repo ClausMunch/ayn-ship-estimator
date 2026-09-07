@@ -92,7 +92,7 @@ class AppServiceProvider extends ServiceProvider
             'recipient' => $recipient,
             'type' => $type,
             'subject' => (string) $event->message->getSubject(),
-            'message_id' => $event->message->getMessageId(),
+            'message_id' => $headers->get('Message-ID')?->getBodyAsString(),
             'sent_at' => now(),
         ]);
     }

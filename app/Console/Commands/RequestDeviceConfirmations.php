@@ -34,19 +34,22 @@ class RequestDeviceConfirmations extends Command
 
         $subscribers = Subscriber::whereNotNull('email_verified_at')
             ->where('delivery_status', '!=', 'bounced')
+            ->whereNull('delivered_confirmed_at')
             ->where(function ($query): void {
-                $query->whereNull('shipped_confirmation_sent_at')
-                    ->orWhereNull('delivered_confirmation_sent_at');
+                $query->where(function ($query): void {
+                    $query->whereNull('shipped_confirmed_at')
+                        ->whereNull('shipped_confirmation_sent_at')
+                        ->whereNull('shipped_not_yet_at');
+                })->orWhere(function ($query): void {
+                    $query->whereNotNull('shipped_confirmed_at')
+                        ->whereNull('delivered_confirmation_sent_at')
+                        ->whereNull('delivered_not_yet_at');
+                });
             })
             ->orderBy('id')
-            ->limit($limit)
-            ->get();
+            ->lazyById();
 
         foreach ($subscribers as $subscriber) {
-            if ($subscriber->delivered_confirmed_at) {
-                continue;
-            }
-
             $variantId = $subscriber->model_variant_id;
             $timelines[$variantId] ??= $estimator->buildTimeline($variantId);
             $shipDate = $estimator->estimateDateFromTimeline(
@@ -87,6 +90,10 @@ class RequestDeviceConfirmations extends Command
                 (new DeviceStatusConfirmation($subscriber, $milestone))->onQueue('mail'),
             );
             $queued++;
+
+            if ($queued >= $limit) {
+                break;
+            }
         }
 
         $this->info("Queued {$queued} device confirmation request(s).");
