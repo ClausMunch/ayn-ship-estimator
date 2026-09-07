@@ -43,6 +43,10 @@ class RequestDeviceConfirmations extends Command
             ->get();
 
         foreach ($subscribers as $subscriber) {
+            if ($subscriber->delivered_confirmed_at) {
+                continue;
+            }
+
             $variantId = $subscriber->model_variant_id;
             $timelines[$variantId] ??= $estimator->buildTimeline($variantId);
             $shipDate = $estimator->estimateDateFromTimeline(
@@ -54,13 +58,24 @@ class RequestDeviceConfirmations extends Command
                 continue;
             }
 
-            $deliveryPromptDate = $shipDate->copy()->addDays($deliveryDays + $followUpDays);
             $shippingPromptDate = $shipDate->copy()->addDays($followUpDays);
             $milestone = null;
 
-            if (! $subscriber->delivered_confirmation_sent_at && $today->gte($deliveryPromptDate)) {
+            // Delivery is only inferred from a shipment the subscriber actually confirmed.
+            // This avoids asking whether an unshipped device has arrived.
+            $deliveryPromptDate = $subscriber->shipped_confirmed_at
+                ? $subscriber->shipped_confirmed_at->copy()->startOfDay()->addDays($deliveryDays + $followUpDays)
+                : null;
+
+            if ($deliveryPromptDate
+                && ! $subscriber->delivered_confirmation_sent_at
+                && ! $subscriber->delivered_not_yet_at
+                && $today->gte($deliveryPromptDate)) {
                 $milestone = 'delivered';
-            } elseif (! $subscriber->shipped_confirmation_sent_at && $today->gte($shippingPromptDate)) {
+            } elseif (! $subscriber->shipped_confirmed_at
+                && ! $subscriber->shipped_confirmation_sent_at
+                && ! $subscriber->shipped_not_yet_at
+                && $today->gte($shippingPromptDate)) {
                 $milestone = 'shipped';
             }
 

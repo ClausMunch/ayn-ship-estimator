@@ -4,4 +4,6 @@ Our estimate suggests that order {{ $subscriber->order_prefix }}xx for {{ $subsc
 
 Confirm here: {{ $confirmationUrl }}
 
-Confirming helps improve estimates for everyone. If it has not happened yet, simply ignore this email.
+Not yet? Let us know here: {{ $notYetUrl }}
+
+Confirming either status helps improve estimates for everyone.

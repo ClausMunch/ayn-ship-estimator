@@ -32,6 +32,8 @@ class VerifySubscription extends Mailable implements ShouldQueue
                         'X-AYN-Verification-Subscriber',
                         (string) $this->subscriber->id,
                     );
+                    $message->getHeaders()->addTextHeader('X-AYN-Mail-Type', 'verification');
+                    $message->getHeaders()->addTextHeader('X-AYN-Subscriber', (string) $this->subscriber->id);
                 },
             ]),
         );

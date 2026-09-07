@@ -21,6 +21,9 @@ class Subscriber extends Model
         'shipped_confirmed_at',
         'delivered_confirmation_sent_at',
         'delivered_confirmed_at',
+        'estimate_notification_sent_at',
+        'shipped_not_yet_at',
+        'delivered_not_yet_at',
         'verification_token',
         'unsubscribe_token',
     ];
@@ -34,6 +37,9 @@ class Subscriber extends Model
         'shipped_confirmed_at' => 'datetime',
         'delivered_confirmation_sent_at' => 'datetime',
         'delivered_confirmed_at' => 'datetime',
+        'estimate_notification_sent_at' => 'datetime',
+        'shipped_not_yet_at' => 'datetime',
+        'delivered_not_yet_at' => 'datetime',
     ];
 
     public function modelVariant(): BelongsTo

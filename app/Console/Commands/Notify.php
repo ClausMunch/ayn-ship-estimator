@@ -18,12 +18,15 @@ class Notify extends Command
     {
         $subscribers = Subscriber::whereNotNull('email_verified_at')
             ->where('delivery_status', '!=', 'bounced')
+            ->whereNull('shipped_confirmed_at')
+            ->whereNull('delivered_confirmed_at')
             ->with('modelVariant')
             ->get();
 
         $this->info("Checking estimates for {$subscribers->count()} verified subscribers...");
 
         $notified = 0;
+        $cooldownDays = max(0, (int) config('shipping.estimate_notification_cooldown_days', 7));
 
         foreach ($subscribers as $subscriber) {
             $result = $estimator->estimate($subscriber->model_variant_id, $subscriber->order_prefix);
@@ -51,6 +54,10 @@ class Notify extends Command
             $daysDiff = abs($lastDate->diffInDays($newDate));
 
             if ($daysDiff >= 2) {
+                if ($subscriber->estimate_notification_sent_at?->gt(now()->subDays($cooldownDays))) {
+                    continue;
+                }
+
                 $oldFormatted = $estimator->formatDateForEmail($lastDate);
                 $newFormatted = $estimator->formatDateForEmail($newDate);
 
@@ -58,7 +65,10 @@ class Notify extends Command
                     new EstimateChanged($subscriber, $oldFormatted, $newFormatted)
                 );
 
-                $subscriber->update(['last_estimated_date' => $newDate->toDateString()]);
+                $subscriber->update([
+                    'last_estimated_date' => $newDate->toDateString(),
+                    'estimate_notification_sent_at' => now(),
+                ]);
                 $notified++;
 
                 $this->line("  Notified {$subscriber->email}: {$oldFormatted} → {$newFormatted}");

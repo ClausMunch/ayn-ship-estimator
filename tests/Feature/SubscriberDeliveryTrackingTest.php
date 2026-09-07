@@ -23,6 +23,12 @@ class SubscriberDeliveryTrackingTest extends TestCase
         $subscriber->refresh();
         $this->assertNotNull($subscriber->verification_sent_at);
         $this->assertSame('active', $subscriber->delivery_status);
+        $this->assertDatabaseHas('email_logs', [
+            'subscriber_id' => $subscriber->id,
+            'recipient' => $subscriber->email,
+            'type' => 'verification',
+            'subject' => 'Verify your shipping estimate subscription',
+        ]);
     }
 
     public function test_pruner_deletes_only_expired_unverified_subscribers(): void

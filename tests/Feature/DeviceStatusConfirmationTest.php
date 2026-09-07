@@ -22,12 +22,55 @@ class DeviceStatusConfirmationTest extends TestCase
         Carbon::setTestNow('2026-08-10 12:00:00');
         Mail::fake();
         $subscriber = $this->subscriberWithShippingData('2026-07-20');
+        $subscriber->update(['shipped_confirmed_at' => '2026-07-22 12:00:00']);
 
         $this->artisan('subscribers:request-device-confirmations')->assertSuccessful();
 
         Mail::assertQueued(DeviceStatusConfirmation::class, function ($mail) use ($subscriber): bool {
             return $mail->subscriber->is($subscriber) && $mail->milestone === 'delivered';
         });
+    }
+
+    public function test_overdue_unconfirmed_subscriber_is_only_asked_about_shipping(): void
+    {
+        Carbon::setTestNow('2026-08-10 12:00:00');
+        Mail::fake();
+        $subscriber = $this->subscriberWithShippingData('2026-07-01');
+
+        $this->artisan('subscribers:request-device-confirmations')->assertSuccessful();
+
+        Mail::assertQueued(DeviceStatusConfirmation::class, fn ($mail): bool => $mail->subscriber->is($subscriber) && $mail->milestone === 'shipped'
+        );
+        Mail::assertQueuedCount(1);
+    }
+
+    public function test_not_yet_link_records_negative_shipping_status(): void
+    {
+        $subscriber = $this->subscriberWithShippingData('2026-08-01');
+        $url = URL::temporarySignedRoute(
+            'device-status.confirm',
+            now()->addDay(),
+            ['subscriber' => $subscriber->id, 'milestone' => 'shipped', 'status' => 'not-yet'],
+            absolute: false,
+        );
+
+        $this->get('https://www.example.com'.$url)->assertOk();
+
+        $subscriber->refresh();
+        $this->assertNotNull($subscriber->shipped_not_yet_at);
+        $this->assertNull($subscriber->shipped_confirmed_at);
+    }
+
+    public function test_delivery_confirmation_prevents_later_shipping_request(): void
+    {
+        Carbon::setTestNow('2026-08-10 12:00:00');
+        Mail::fake();
+        $subscriber = $this->subscriberWithShippingData('2026-07-01');
+        $subscriber->update(['delivered_confirmed_at' => now()]);
+
+        $this->artisan('subscribers:request-device-confirmations')->assertSuccessful();
+
+        Mail::assertNothingQueued();
     }
 
     public function test_signed_delivery_link_records_both_milestones(): void
@@ -56,6 +99,7 @@ class DeviceStatusConfirmationTest extends TestCase
 
         $this->assertStringContainsString('href="https://ayngonnaship.com/confirm-device-status/', $html);
         $this->assertStringNotContainsString('href="/confirm-device-status/', $html);
+        $this->assertStringContainsString('/delivered/not-yet?', $html);
 
         preg_match('/href="([^"]+)"/', $html, $matches);
         $this->get(html_entity_decode($matches[1]))->assertOk();

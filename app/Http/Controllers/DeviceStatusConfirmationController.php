@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 
 class DeviceStatusConfirmationController extends Controller
 {
-    public function __invoke(Request $request, Subscriber $subscriber, string $milestone): View
+    public function __invoke(Request $request, Subscriber $subscriber, string $milestone, ?string $status = null): View
     {
         abort_unless(
             $request->hasValidSignature(absolute: false) || $request->hasValidSignature(),
@@ -17,6 +17,14 @@ class DeviceStatusConfirmationController extends Controller
         );
 
         $now = now();
+
+        if ($status === 'not-yet') {
+            $subscriber->update([
+                $milestone === 'delivered' ? 'delivered_not_yet_at' : 'shipped_not_yet_at' => $now,
+            ]);
+
+            return view('device-status-confirmed', ['milestone' => $milestone, 'status' => 'not-yet']);
+        }
 
         if ($milestone === 'delivered') {
             $subscriber->update([
@@ -29,6 +37,6 @@ class DeviceStatusConfirmationController extends Controller
             ]);
         }
 
-        return view('device-status-confirmed', ['milestone' => $milestone]);
+        return view('device-status-confirmed', ['milestone' => $milestone, 'status' => 'confirmed']);
     }
 }

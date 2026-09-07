@@ -19,7 +19,9 @@
                 Confirm {{ $milestone === 'delivered' ? 'device received' : 'device shipped' }}
             </a>
         </p>
-        <p style="font-size:12px;color:#666680">If it has not happened yet, simply ignore this email.</p>
+        <p style="font-size:13px;color:#88889c">
+            Not yet? <a href="{{ $notYetUrl }}" style="color:#a5b4fc">Let us know</a>, and we will not ask about the next milestone prematurely.
+        </p>
     </div>
 </body>
 </html>

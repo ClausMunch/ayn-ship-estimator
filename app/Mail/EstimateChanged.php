@@ -10,6 +10,7 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Symfony\Component\Mime\Email;
 
 class EstimateChanged extends Mailable
 {
@@ -27,7 +28,15 @@ class EstimateChanged extends Mailable
 
         return new Envelope(
             subject: "Your AYN Thor {$modelName} estimate changed",
-            using: array_filter([$this->bounceEnvelopeCallback()]),
+            using: array_filter([
+                $this->bounceEnvelopeCallback(),
+                function (Email $message): void {
+                    $message->getHeaders()->addTextHeader(
+                        'X-AYN-Estimate-Subscriber',
+                        (string) $this->subscriber->id,
+                    );
+                },
+            ]),
         );
     }
 

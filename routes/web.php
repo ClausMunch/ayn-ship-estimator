@@ -22,8 +22,9 @@ Route::get('/sitemap.xml', function () {
 });
 Route::get('/verify/{token}', [SubscribeController::class, 'verify']);
 Route::get('/unsubscribe/{token}', [SubscribeController::class, 'unsubscribe']);
-Route::get('/confirm-device-status/{subscriber}/{milestone}', DeviceStatusConfirmationController::class)
+Route::get('/confirm-device-status/{subscriber}/{milestone}/{status?}', DeviceStatusConfirmationController::class)
     ->whereIn('milestone', ['shipped', 'delivered'])
+    ->whereIn('status', ['not-yet'])
     ->name('device-status.confirm');
 
 // Admin auth (guest only)

@@ -36,6 +36,8 @@ class DeviceStatusConfirmation extends Mailable implements ShouldQueue
                         'X-AYN-Device-Confirmation',
                         "{$this->subscriber->id}:{$this->milestone}",
                     );
+                    $message->getHeaders()->addTextHeader('X-AYN-Mail-Type', "device_{$this->milestone}");
+                    $message->getHeaders()->addTextHeader('X-AYN-Subscriber', (string) $this->subscriber->id);
                 },
             ]),
         );
@@ -51,6 +53,12 @@ class DeviceStatusConfirmation extends Mailable implements ShouldQueue
             absolute: false,
         );
         $confirmationUrl = rtrim(config('app.url'), '/').$signedConfirmationPath;
+        $notYetPath = URL::temporarySignedRoute(
+            'device-status.confirm',
+            now()->addDays(30),
+            ['subscriber' => $subscriber->id, 'milestone' => $this->milestone, 'status' => 'not-yet'],
+            absolute: false,
+        );
 
         return new Content(
             view: 'mail.device-status-confirmation',
@@ -59,6 +67,7 @@ class DeviceStatusConfirmation extends Mailable implements ShouldQueue
                 'subscriber' => $subscriber,
                 'milestone' => $this->milestone,
                 'confirmationUrl' => $confirmationUrl,
+                'notYetUrl' => rtrim(config('app.url'), '/').$notYetPath,
             ],
         );
     }

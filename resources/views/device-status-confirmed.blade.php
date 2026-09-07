@@ -10,7 +10,11 @@
     <main style="background:#15151f;border:1px solid #2a2a3a;border-radius:16px;padding:40px;text-align:center;max-width:440px">
         <h1 style="color:#fff;font-size:22px">Thank you!</h1>
         <p style="color:#a8a8bc;line-height:1.6">
-            Your {{ $milestone === 'delivered' ? 'delivery' : 'shipment' }} confirmation was recorded and will help improve future estimates.
+            @if ($status === 'not-yet')
+                We recorded that your device has not {{ $milestone === 'delivered' ? 'arrived' : 'shipped' }} yet. We will not ask about a later milestone prematurely.
+            @else
+                Your {{ $milestone === 'delivered' ? 'delivery' : 'shipment' }} confirmation was recorded and will help improve future estimates.
+            @endif
         </p>
         <a href="/" style="color:#818cf8">Back to estimator</a>
     </main>
