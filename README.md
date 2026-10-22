@@ -28,7 +28,7 @@ A single-purpose shipping estimate tool for AYN Thor handhelds. Pick your model 
 
 - PHP 8.4+ (required by Laravel 12)
 - Composer
-- Node.js 20+ (or Bun)
+- Node.js 22.12+ (required by Puppeteer, including when using Bun for package installation)
 - Puppeteer system dependencies (for scraping)
 
 ### Setup
@@ -53,6 +53,9 @@ npm run build    # or: bun run build
 # Serve
 php artisan serve
 ```
+
+The repository tracks `bun.lock`. Use `bun install --frozen-lockfile` for
+reproducible installs, including deployments, to use the audited dependency versions.
 
 The app will be available at `http://localhost:8000`.
 
@@ -92,7 +95,7 @@ If scraping uses Snap Chromium, prefer running the scheduler with Supervisor (`p
 ### Server requirements
 
 - PHP 8.4+ (required by Laravel 12)
-- Node.js 20+
+- Node.js 22.12+
 - Supervisor (for queue worker)
 
 ### System dependencies for Puppeteer
