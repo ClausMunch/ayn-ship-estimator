@@ -3,20 +3,26 @@
 use App\Http\Controllers\Admin\AnalyticsController;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\GuidesController;
 use App\Http\Controllers\Admin\QueueController;
 use App\Http\Controllers\Admin\ScrapeLogsController;
 use App\Http\Controllers\Admin\SubscribersController;
 use App\Http\Controllers\DeviceStatusConfirmationController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\GuideController;
 use App\Http\Controllers\SubscribeController;
+use App\Models\Guide;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index']);
 
+Route::get('/guides', [GuideController::class, 'index'])->name('guides.index');
+Route::get('/guides/{slug}', [GuideController::class, 'show'])->name('guides.show');
+
 Route::get('/sitemap.xml', function () {
     $url = config('app.url');
 
-    return response()->view('sitemap', ['url' => $url], 200, [
+    return response()->view('sitemap', ['url' => $url, 'guides' => Guide::published()->orderBy('id')->get(['slug', 'updated_at'])], 200, [
         'Content-Type' => 'application/xml',
     ]);
 });
@@ -50,6 +56,8 @@ Route::middleware('auth')
         ])->middleware('throttle:5,1');
         Route::delete('/subscribers/{subscriber}', [SubscribersController::class, 'destroy']);
         Route::get('/analytics', [AnalyticsController::class, 'index']);
+        Route::get('/guides/{guide}/preview', [GuidesController::class, 'preview'])->name('admin.guides.preview');
+        Route::resource('guides', GuidesController::class)->except(['show', 'destroy'])->names('admin.guides');
         Route::get('/scrape-logs', [ScrapeLogsController::class, 'index']);
         Route::delete('/scrape-logs', [ScrapeLogsController::class, 'clear'])->middleware('throttle:3,1');
         Route::get('/queue', [QueueController::class, 'index']);

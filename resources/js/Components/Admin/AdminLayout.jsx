@@ -3,6 +3,7 @@ import { usePage, router } from '@inertiajs/react';
 const NAV = [
     { label: 'Dashboard', href: '/admin' },
     { label: 'Subscribers', href: '/admin/subscribers' },
+    { label: 'Guides', href: '/admin/guides' },
     { label: 'Analytics', href: '/admin/analytics' },
     { label: 'Scrape Logs', href: '/admin/scrape-logs' },
     { label: 'Queue', href: '/admin/queue' },
@@ -16,16 +17,16 @@ export default function AdminLayout({ children, title }) {
     };
 
     return (
-        <div className="min-h-screen bg-[#0c0c14] text-[#e0e0e8] flex">
+        <div className="min-h-screen bg-[#0c0c14] text-[#e0e0e8] flex flex-col md:flex-row">
             {/* Sidebar */}
-            <aside className="w-56 bg-[#15151f] border-r border-[#2a2a3a] flex flex-col shrink-0">
+            <aside className="w-full md:w-56 bg-[#15151f] border-r border-[#2a2a3a] flex flex-col shrink-0">
                 <div className="px-5 py-6 border-b border-[#2a2a3a]">
                     <h1 className="font-sans text-sm font-semibold text-white tracking-tight">
                         Admin Panel
                     </h1>
                     <p className="text-[10px] text-[#555570] mt-1">AYN Thor Estimator</p>
                 </div>
-                <nav className="flex-1 px-3 py-4 space-y-1">
+                <nav className="flex flex-wrap gap-1 md:block md:flex-1 px-3 py-4 md:space-y-1">
                     {NAV.map((item) => {
                         const active = url === item.href
                             || (item.href !== '/admin' && url.startsWith(item.href));
@@ -54,7 +55,7 @@ export default function AdminLayout({ children, title }) {
             </aside>
 
             {/* Main content */}
-            <main className="flex-1 p-8 overflow-auto">
+            <main className="min-w-0 flex-1 p-4 sm:p-8 overflow-auto">
                 {title && (
                     <h2 className="font-sans text-lg font-semibold text-white mb-6">{title}</h2>
                 )}

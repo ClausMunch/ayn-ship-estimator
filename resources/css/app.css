@@ -19,3 +19,33 @@ input::placeholder {
     letter-spacing: 4px;
     font-weight: 300;
 }
+
+/* Guide pages share the estimator palette, with a wider reading layout. */
+.guide-site :focus-visible { outline: 2px solid #a5b4fc; outline-offset: 4px; }
+.skip-link { position: absolute; left: 1rem; top: -5rem; z-index: 50; padding: .75rem 1rem; background: #a5b4fc; color: #0c0c14; border-radius: .5rem; }
+.skip-link:focus { top: 1rem; }
+.guide-input { border: 1px solid #343449; border-radius: .5rem; background: #0c0c14; padding: .65rem .8rem; color: #e0e0e8; font-size: .875rem; }
+.guide-input::placeholder { color: #9292ab; letter-spacing: normal; font-weight: 400; }
+.guide-button { border-radius: .5rem; background: #a5b4fc; padding: .7rem 1.1rem; color: #111123; font-size: .875rem; font-weight: 600; cursor: pointer; }
+.guide-button:hover { background: #c7d2fe; }
+.guide-prose { color: #c1c1d2; font-size: 1rem; line-height: 1.9; overflow-wrap: anywhere; }
+.guide-prose > :first-child { margin-top: 0; }
+.guide-prose p, .guide-prose ul, .guide-prose ol, .guide-prose blockquote, .guide-prose pre, .guide-prose table { margin: 1.4rem 0; }
+.guide-prose h1, .guide-prose h2, .guide-prose h3, .guide-prose h4 { color: #fff; font-weight: 600; line-height: 1.35; margin: 2.5rem 0 1rem; scroll-margin-top: 2rem; }
+.guide-prose h1, .guide-prose h2 { font-size: 1.65rem; letter-spacing: -.025em; }
+.guide-prose h3 { font-size: 1.25rem; }
+.guide-prose a { color: #a5b4fc; text-decoration: underline; text-underline-offset: 3px; }
+.guide-prose a:hover { color: #c7d2fe; }
+.guide-prose strong { color: #e0e0e8; font-weight: 600; }
+.guide-prose ul { list-style: disc; padding-left: 1.5rem; }
+.guide-prose ol { list-style: decimal; padding-left: 1.5rem; }
+.guide-prose li { margin: .45rem 0; }
+.guide-prose blockquote { border-left: 3px solid #818cf8; background: #15151f; padding: .25rem 1.25rem; }
+.guide-prose pre { overflow-x: auto; padding: 1.25rem; background: #15151f; border: 1px solid #2a2a3a; border-radius: .75rem; font-size: .8rem; }
+.guide-prose code { font-family: var(--font-mono); font-size: .85em; }
+.guide-prose :not(pre) > code { background: #202030; color: #c7d2fe; padding: .15rem .35rem; border-radius: .25rem; }
+.guide-prose img { max-width: 100%; height: auto; border-radius: .75rem; margin: 1.5rem 0; }
+.guide-prose table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; font-size: .875rem; }
+.guide-prose th, .guide-prose td { padding: .7rem 1rem; border: 1px solid #343449; text-align: left; }
+.guide-prose th { background: #15151f; color: #e0e0e8; }
+.guide-prose hr { border-color: #2a2a3a; margin: 2rem 0; }

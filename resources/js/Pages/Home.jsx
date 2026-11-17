@@ -103,6 +103,11 @@ export default function Home({ variants, lastUpdated, csrfToken, signedTs }) {
                 </section>
             </article>
 
+            <a href="/guides" className="mt-6 w-full max-w-[480px] rounded-xl border border-[#2a2a3a] bg-[#15151f] px-6 py-4 text-left hover:border-[#818cf8] transition-colors">
+                <span className="block font-sans text-sm font-semibold text-white">Make the most of your Thor <span aria-hidden="true">→</span></span>
+                <span className="mt-1 block text-xs text-[#a8a8bc]">Explore setup guides, tips and troubleshooting.</span>
+            </a>
+
             <footer className="mt-6 text-center text-[10px] text-[#444460] font-light space-y-1">
                 <p>
                     Data scraped from{' '}

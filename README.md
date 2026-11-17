@@ -29,6 +29,7 @@ A single-purpose shipping estimate tool for AYN Thor handhelds. Pick your model 
 - PHP 8.4+ (required by Laravel 12)
 - Composer
 - Node.js 22.12+ (required by Puppeteer, including when using Bun for package installation)
+- Bun 1.3.8+ (for installs using the tracked lockfile)
 - Puppeteer system dependencies (for scraping)
 
 ### Setup
@@ -36,7 +37,7 @@ A single-purpose shipping estimate tool for AYN Thor handhelds. Pick your model 
 ```bash
 # Install dependencies
 composer install
-npm install      # or: bun install
+bun install --frozen-lockfile
 
 # Environment
 cp .env.example .env
@@ -48,7 +49,7 @@ php artisan migrate
 php artisan seed:data
 
 # Build frontend
-npm run build    # or: bun run build
+bun run build
 
 # Serve
 php artisan serve
@@ -96,6 +97,7 @@ If scraping uses Snap Chromium, prefer running the scheduler with Supervisor (`p
 
 - PHP 8.4+ (required by Laravel 12)
 - Node.js 22.12+
+- Bun 1.3.8+
 - Supervisor (for queue worker)
 
 ### System dependencies for Puppeteer
@@ -160,8 +162,8 @@ php artisan config:clear
 sudo apt-get update
 sudo apt-get install -y chromium-browser chromium-codecs-ffmpeg-extra
 
-npm install
-npm run build
+bun install --frozen-lockfile
+bun run build
 
 # Configure Browsershot launch flags (no explicit chrome path)
 if ! grep -q "BROWSERSHOT_CHROME_PATH" .env; then
@@ -200,8 +202,8 @@ If scrape errors include `Could not find Chrome (ver. ...)`, the configured exec
 **For x86-64 servers:**
 
 ```bash
-npm install
-npm run build
+bun install --frozen-lockfile
+bun run build
 npx puppeteer install
 
 touch database/database.sqlite
