@@ -12,6 +12,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Leading indentation is meaningful in Markdown code blocks.
+        $middleware->trimStrings(except: ['body']);
         $middleware->web(append: [
             \Inertia\Middleware::class,
         ]);

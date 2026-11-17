@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\SaveGuideRequest;
 use App\Models\Guide;
 use App\Services\GuideMarkdown;
+use App\Services\GuidePasteCleaner;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response as HttpResponse;
 use Inertia\Inertia;
@@ -22,7 +25,7 @@ class GuidesController extends Controller
 
     public function create(): Response
     {
-        return Inertia::render('Admin/Guides/Edit', ['guide' => null]);
+        return Inertia::render('Admin/Guides/Edit', ['guide' => null, 'csrfToken' => csrf_token()]);
     }
 
     public function store(SaveGuideRequest $request): RedirectResponse
@@ -36,7 +39,7 @@ class GuidesController extends Controller
 
     public function edit(Guide $guide): Response
     {
-        return Inertia::render('Admin/Guides/Edit', ['guide' => $guide, 'saved' => session()->has('success')]);
+        return Inertia::render('Admin/Guides/Edit', ['guide' => $guide, 'saved' => session()->has('success'), 'csrfToken' => csrf_token()]);
     }
 
     public function update(SaveGuideRequest $request, Guide $guide): RedirectResponse
@@ -46,6 +49,22 @@ class GuidesController extends Controller
         $guide->update($data);
 
         return redirect()->route('admin.guides.edit', $guide)->with('success', 'Guide saved.');
+    }
+
+    public function renderContent(Request $request, GuideMarkdown $markdown): JsonResponse
+    {
+        $data = $request->validate(['body' => ['nullable', 'string', 'max:200000']]);
+
+        return response()->json($markdown->render($data['body'] ?? ''))
+            ->header('Cache-Control', 'private, no-store');
+    }
+
+    public function cleanPaste(Request $request, GuidePasteCleaner $cleaner): JsonResponse
+    {
+        $data = $request->validate(['body' => ['required', 'string', 'max:200000']]);
+
+        return response()->json($cleaner->clean($data['body']))
+            ->header('Cache-Control', 'private, no-store');
     }
 
     public function preview(Guide $guide, GuideMarkdown $markdown): HttpResponse

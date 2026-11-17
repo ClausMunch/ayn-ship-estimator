@@ -29,7 +29,7 @@
     @endunless
     <div class="mt-10 grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_250px] lg:gap-16">
         @if (count($content['headings']))
-            <aside class="rounded-xl border border-[#2a2a3a] bg-[#15151f] p-5 lg:sticky lg:top-8 lg:col-start-2 lg:row-start-1">
+            <aside class="rounded-xl border border-[#2a2a3a] bg-[#15151f] p-5 max-h-80 overflow-y-auto lg:max-h-[calc(100vh-4rem)] lg:sticky lg:top-8 lg:col-start-2 lg:row-start-1">
                 <nav aria-label="On this page">
                     <h2 class="mb-4 font-mono text-xs uppercase tracking-widest text-[#a8a8bc]">On this page</h2>
                     <ol class="space-y-3 text-sm leading-6">

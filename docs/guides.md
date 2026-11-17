@@ -20,6 +20,16 @@ A slug is unique across drafts and published guides. Changing it changes the URL
 
 The system stores English articles to match the existing site. Topic names are free text; use consistent spelling to group guides together. The public library supports topic filtering, title/summary search and pagination.
 
+## Pasted text and current preview
+
+Use **Preview current text** in the editor to render the current Markdown without saving or publishing. It uses the same safe server-side renderer as the public guide, including tables, headings, images and code. The existing **Preview saved version** link still opens the full article layout for saved content.
+
+Use **Clean pasted text** after pasting AI-generated exports. It removes exported favicon citation badges and the associated GitHub source labels, restores standalone image-search links as Markdown images, formats screenshot notes as callouts and tidies redundant heading markup. It preserves ordinary source links and code blocks. Nothing is saved automatically; inspect the output, use **Undo cleanup** if needed, then save explicitly.
+
+Image-search URLs can expire. Replace them with durable images you host, and add real screenshots where the draft says **Screenshot needed**. Copying a rich-text card or citation badge does not recreate that card as Markdown.
+
+The supplied DS Forever draft has a cleaned Markdown copy at `docs/drafts/ds-forever-ayn-thor.md`. It is not seeded, published or fact-checked by this formatting change.
+
 ## Markdown and images
 
 The article title supplies the page H1. Use `## Section` and `### Subsection` in the body for the automatic contents navigation. Standard Markdown and GitHub-style tables are supported. Raw HTML is stripped and unsafe URL protocols are disabled; scripts and ad code do not belong in article content.

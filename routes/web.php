@@ -65,6 +65,8 @@ Route::middleware('auth')
         ])->middleware('throttle:5,1');
         Route::delete('/subscribers/{subscriber}', [SubscribersController::class, 'destroy']);
         Route::get('/analytics', [AnalyticsController::class, 'index']);
+        Route::post('/guides/render', [GuidesController::class, 'renderContent'])->middleware('throttle:120,1');
+        Route::post('/guides/clean-paste', [GuidesController::class, 'cleanPaste'])->middleware('throttle:30,1');
         Route::get('/guides/{guide}/preview', [GuidesController::class, 'preview'])->name('admin.guides.preview');
         Route::resource('guides', GuidesController::class)->except(['show', 'destroy'])->names('admin.guides');
         Route::get('/scrape-logs', [ScrapeLogsController::class, 'index']);

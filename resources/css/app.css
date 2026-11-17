@@ -46,6 +46,6 @@ input::placeholder {
 .guide-prose :not(pre) > code { background: #202030; color: #c7d2fe; padding: .15rem .35rem; border-radius: .25rem; }
 .guide-prose img { max-width: 100%; height: auto; border-radius: .75rem; margin: 1.5rem 0; }
 .guide-prose table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; font-size: .875rem; }
-.guide-prose th, .guide-prose td { padding: .7rem 1rem; border: 1px solid #343449; text-align: left; }
+.guide-prose th, .guide-prose td { padding: .7rem 1rem; border: 1px solid #343449; text-align: left; overflow-wrap: normal; }
 .guide-prose th { background: #15151f; color: #e0e0e8; }
 .guide-prose hr { border-color: #2a2a3a; margin: 2rem 0; }
