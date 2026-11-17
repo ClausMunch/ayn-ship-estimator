@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Guide;
 use App\Models\ModelVariant;
 use App\Models\ScrapeLog;
 use Inertia\Inertia;
@@ -27,6 +28,10 @@ class HomeController extends Controller
             'lastUpdated' => $lastUpdated?->toIso8601String(),
             'csrfToken' => csrf_token(),
             'signedTs' => "{$timestamp}.{$hmac}",
+        ])->rootView('home')->withViewData([
+            'variants' => $variants,
+            'lastUpdated' => $lastUpdated,
+            'latestGuides' => Guide::published()->latest('published_at')->orderByDesc('id')->limit(3)->get(['title', 'slug']),
         ]);
     }
 }

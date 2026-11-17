@@ -1,14 +1,24 @@
 @extends('guides.layout', [
-    'title' => 'Setup, play and get more from your Thor',
+    'title' => 'AYN Thor setup & gaming guides'.($guides->currentPage() > 1 ? ' — Page '.$guides->currentPage() : ''),
     'description' => 'Explore AYN Thor setup guides, gaming walkthroughs and troubleshooting. From first boot to your next adventure.',
-    'canonical' => route('guides.index'),
+    'canonical' => $indexCanonical,
+    'robots' => $robots,
+    'structuredData' => [[
+        '@type' => 'CollectionPage', 'url' => $indexCanonical,
+        'name' => 'AYN Thor setup & gaming guides',
+        'isPartOf' => ['@id' => \App\Support\SiteUrl::to().'#website'],
+        'mainEntity' => ['@type' => 'ItemList', 'itemListElement' => $guides->getCollection()->values()->map(fn ($item, $index) => [
+            '@type' => 'ListItem', 'position' => ($guides->firstItem() ?? 1) + $index,
+            'name' => $item->title, 'url' => \App\Support\SiteUrl::to('/guides/'.$item->slug),
+        ])->all()],
+    ]],
 ])
 
 @section('content')
     <section class="mb-12 grid items-center gap-8 md:grid-cols-[1fr_240px]">
         <div>
             <p class="mb-4 font-mono text-xs uppercase tracking-widest text-[#a5b4fc]">The next step after delivery</p>
-            <h1 class="max-w-2xl text-4xl font-semibold leading-tight tracking-tight text-white sm:text-5xl">Your Thor.<br>A little more possibility.</h1>
+            <h1 class="max-w-2xl text-4xl font-semibold leading-tight tracking-tight text-white sm:text-5xl">AYN Thor guides.<br>Set up. Play. Explore.</h1>
             <p class="mt-5 max-w-xl text-base leading-8 text-[#a8a8bc]">Setup guides, gaming walkthroughs and help when something gets in the way. Find your next step here.</p>
         </div>
         <img src="/images/ayn-thor-optimized.webp" alt="AYN Thor dual-screen handheld" width="640" height="640" class="hidden w-60 object-contain md:block">

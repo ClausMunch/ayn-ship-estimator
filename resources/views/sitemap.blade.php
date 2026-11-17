@@ -6,12 +6,15 @@
         <priority>1.0</priority>
     </url>
     <url>
-        <loc>{{ route('guides.index') }}</loc>
+        <loc>{{ \App\Support\SiteUrl::to('/guides') }}</loc>
         <changefreq>weekly</changefreq>
+    </url>
+    <url>
+        <loc>{{ \App\Support\SiteUrl::to('/about') }}</loc>
     </url>
     @foreach ($guides as $guide)
         <url>
-            <loc>{{ route('guides.show', $guide->slug) }}</loc>
+            <loc>{{ \App\Support\SiteUrl::to('/guides/'.$guide->slug) }}</loc>
             <lastmod>{{ $guide->updated_at->toAtomString() }}</lastmod>
         </url>
     @endforeach

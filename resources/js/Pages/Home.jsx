@@ -2,7 +2,6 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import ModelSelector from '../Components/ModelSelector';
 import OrderInput from '../Components/OrderInput';
 import ResultDisplay from '../Components/ResultDisplay';
-import HowItWorks from '../Components/HowItWorks';
 import SubscribeForm from '../Components/SubscribeForm';
 import Toast from '../Components/Toast';
 import { buildTimeline, estimateShipDate } from '../lib/estimation';
@@ -52,7 +51,7 @@ export default function Home({ variants, lastUpdated, csrfToken, signedTs }) {
     }, [result]);
 
     return (
-        <main className="min-h-screen bg-[#0c0c14] text-[#e0e0e8] font-mono flex flex-col items-center justify-center p-6">
+        <div className="font-mono text-[#e0e0e8]">
             {verified && (
                 <Toast message="Email verified! You'll be notified when your estimate changes." />
             )}
@@ -67,9 +66,9 @@ export default function Home({ variants, lastUpdated, csrfToken, signedTs }) {
                         fetchPriority="high"
                         className="w-36 h-36 mx-auto -mt-3 -mb-1 object-contain"
                     />
-                    <h1 className="font-sans text-xl font-semibold text-white tracking-tight mb-1">
-                        AYN Thor Ship Date Estimator
-                    </h1>
+                    <h2 className="font-sans text-xl font-semibold text-white tracking-tight mb-1">
+                        Check your order
+                    </h2>
                     <p className="text-xs text-[#666680] font-light">
                         Based on known shipping batches
                         {lastUpdated && ` · Updated ${new Date(lastUpdated).toLocaleDateString()}`}
@@ -85,14 +84,16 @@ export default function Home({ variants, lastUpdated, csrfToken, signedTs }) {
 
                     <OrderInput value={orderInput} onChange={setOrderInput} />
 
-                    <ResultDisplay
-                        result={result}
-                        orderInput={orderInput}
-                        modelName={selectedVariant?.name || ''}
-                        lastEnd={lastEnd}
-                    />
+                    <div role="status" aria-live="polite" aria-atomic="true">
+                        <ResultDisplay
+                            result={result}
+                            orderInput={orderInput}
+                            modelName={selectedVariant?.name || ''}
+                            lastEnd={lastEnd}
+                        />
+                    </div>
 
-                    <HowItWorks />
+                    <a href="#shipping-method" className="mt-5 block text-center text-xs text-[#a5b4fc] underline">How are shipping dates estimated?</a>
 
                     <SubscribeForm
                         variantId={selectedVariantId}
@@ -103,24 +104,6 @@ export default function Home({ variants, lastUpdated, csrfToken, signedTs }) {
                 </section>
             </article>
 
-            <a href="/guides" className="mt-6 w-full max-w-[480px] rounded-xl border border-[#2a2a3a] bg-[#15151f] px-6 py-4 text-left hover:border-[#818cf8] transition-colors">
-                <span className="block font-sans text-sm font-semibold text-white">Make the most of your Thor <span aria-hidden="true">→</span></span>
-                <span className="mt-1 block text-xs text-[#a8a8bc]">Explore setup guides, tips and troubleshooting.</span>
-            </a>
-
-            <footer className="mt-6 text-center text-[10px] text-[#444460] font-light space-y-1">
-                <p>
-                    Data scraped from{' '}
-                    <a
-                        href="https://www.ayntec.com/pages/shipment-dashboard"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="underline hover:text-[#666680]"
-                    >
-                        ayntec.com
-                    </a>
-                </p>
-            </footer>
-        </main>
+        </div>
     );
 }

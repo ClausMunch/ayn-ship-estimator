@@ -1,7 +1,7 @@
 @extends('guides.layout', [
     'title' => $guide->title,
     'description' => $guide->excerpt,
-    'canonical' => route('guides.show', $guide->slug),
+    'canonical' => \App\Support\SiteUrl::to('/guides/'.$guide->slug),
 ])
 
 @section('content')
@@ -12,7 +12,7 @@
         </aside>
     @endif
     <nav aria-label="Breadcrumb" class="mb-8 text-sm text-[#a8a8bc]">
-        <a href="{{ route('guides.index') }}" class="hover:text-white">All guides</a> <span aria-hidden="true" class="mx-2">/</span> {{ $guide->category }}
+        <a href="/" class="hover:text-white">Home</a> <span aria-hidden="true" class="mx-2">/</span> <a href="{{ route('guides.index') }}" class="hover:text-white">Guides</a> <span aria-hidden="true" class="mx-2">/</span> <span>{{ $guide->title }}</span>
     </nav>
     <header class="max-w-3xl">
         <p class="mb-4 font-mono text-xs uppercase tracking-widest text-[#a5b4fc]">{{ $guide->category }}</p>

@@ -30,7 +30,7 @@ export default function ModelSelector({ variants, selectedId, onSelect }) {
             <span className="block text-[10px] font-semibold uppercase tracking-[1.5px] text-[#555570] mb-2.5">
                 Model
             </span>
-            <div className="grid grid-cols-2 gap-1.5 mb-6">
+            <div role="group" aria-label="Model variant" className="grid grid-cols-2 gap-1.5 mb-6">
                 {variants.map((v) => {
                     const active = v.id === selectedId;
                     const colors = v.color_config;
@@ -41,6 +41,7 @@ export default function ModelSelector({ variants, selectedId, onSelect }) {
                         <button
                             key={v.id}
                             onClick={() => onSelect(v.id)}
+                            aria-pressed={active}
                             className="rounded-lg px-2.5 py-2 text-left font-mono text-[11px] cursor-pointer transition-all duration-150"
                             style={{
                                 background: active ? activeBackground : '#1a1a28',

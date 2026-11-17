@@ -12,15 +12,24 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\GuideController;
 use App\Http\Controllers\SubscribeController;
 use App\Models\Guide;
+use App\Support\SiteUrl;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index']);
 
+Route::view('/about', 'pages.about')->name('about');
+
 Route::get('/guides', [GuideController::class, 'index'])->name('guides.index');
 Route::get('/guides/{slug}', [GuideController::class, 'show'])->name('guides.show');
 
+Route::get('/robots.txt', function () {
+    return response()->view('robots', ['sitemapUrl' => SiteUrl::to('/sitemap.xml')], 200, [
+        'Content-Type' => 'text/plain; charset=UTF-8',
+    ]);
+});
+
 Route::get('/sitemap.xml', function () {
-    $url = config('app.url');
+    $url = SiteUrl::to();
 
     return response()->view('sitemap', ['url' => $url, 'guides' => Guide::published()->orderBy('id')->get(['slug', 'updated_at'])], 200, [
         'Content-Type' => 'application/xml',

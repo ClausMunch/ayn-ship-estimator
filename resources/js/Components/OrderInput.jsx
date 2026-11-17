@@ -6,11 +6,13 @@ export default function OrderInput({ value, onChange }) {
 
     return (
         <div>
-            <span className="block text-[10px] font-semibold uppercase tracking-[1.5px] text-[#555570] mb-2.5">
+            <label htmlFor="order-prefix" className="block text-[10px] font-semibold uppercase tracking-[1.5px] text-[#555570] mb-2.5">
                 Order Number (first 4 digits)
-            </span>
+            </label>
             <div className="relative mb-6">
                 <input
+                    id="order-prefix"
+                    name="order_prefix"
                     type="text"
                     inputMode="numeric"
                     maxLength={4}
